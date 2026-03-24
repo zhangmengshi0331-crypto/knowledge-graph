@@ -591,206 +591,216 @@
 
     <script>
         // ============================================================
-        // WikiData API 查询模块
+        // 产业链查询模块（WikiData REST API + 内置知识库兜底）
         // ============================================================
 
-        // 中文关键词 → WikiData QID 映射（常用行业）
-        const KEYWORD_QID_MAP = {
-            '新能源汽车': 'Q193692', '电动汽车': 'Q193692',
-            '光伏': 'Q78911', '太阳能': 'Q78911', '光伏发电': 'Q78911',
-            '半导体': 'Q188075', '芯片': 'Q188075',
-            '锂电池': 'Q844926', '电池': 'Q844926',
-            '人工智能': 'Q11660', 'AI': 'Q11660',
-            '钢铁': 'Q11427', '钢': 'Q11427',
-            '石油': 'Q42962', '石化': 'Q42962',
-            '医药': 'Q28885102', '制药': 'Q28885102',
-            '航空': 'Q2166574', '航空航天': 'Q2166574',
-            '汽车': 'Q1420', '燃油车': 'Q1420',
-            '5G': 'Q2119331', '通信': 'Q2119331',
-            '云计算': 'Q483639',
-            '新能源': 'Q12705', '可再生能源': 'Q12705',
-            '风电': 'Q80638', '风能': 'Q80638',
-            '机器人': 'Q11012',
-            '生物技术': 'Q7058', '生物医药': 'Q7058',
+        // 内置产业链知识库（兜底数据，覆盖常见行业）
+        const knowledgeBase = {
+            '新能源汽车': { id: 'ev', name: '新能源汽车', type: 'industry', description: '采用非常规车用燃料作为动力来源的汽车，包括纯电动、混合动力等。', meta: ['市场规模: 万亿级', '增长率: 30%+', '政策支持: 强'], upstream: ['锂电池', '芯片', '电机', '车身材料'], downstream: ['充电桩', '二手车市场', '汽车保险', '共享出行'] },
+            '锂电池': { id: 'battery', name: '锂电池', type: 'product', description: '新能源汽车核心零部件，由正极、负极、电解液和隔膜组成。', meta: ['成本占比: 40%', '技术壁垒: 高', '市场规模: 千亿级'], upstream: ['锂矿', '钴矿', '隔膜', '电解液'], downstream: ['新能源汽车', '储能系统', '消费电子'] },
+            '芯片': { id: 'chip', name: '芯片', type: 'product', description: '汽车电子系统核心，包括MCU、功率半导体、传感器等。', meta: ['单车用量: 1000+', '国产化率: 15%', '进口依赖: 高'], upstream: ['硅片', '光刻机', 'EDA软件', '特种气体'], downstream: ['新能源汽车', '智能手机', '服务器', '物联网'] },
+            '电机': { id: 'motor', name: '电机', type: 'product', description: '新能源汽车动力来源，将电能转换为机械能。', meta: ['效率: 95%+', '功率密度: 高', '成本占比: 10%'], upstream: ['永磁材料', '硅钢片', '铜线', '轴承'], downstream: ['新能源汽车', '工业机器人', '家电'] },
+            '车身材料': { id: 'material', name: '车身材料', type: 'material', description: '包括铝合金、高强度钢、碳纤维等轻量化材料。', meta: ['轻量化需求: 强', '成本敏感: 中'], upstream: ['铝土矿', '铁矿石', '碳纤维原丝'], downstream: ['新能源汽车', '航空航天', '轨道交通'] },
+            '充电桩': { id: 'charger', name: '充电桩', type: 'product', description: '为电动汽车提供充电服务的设备。', meta: ['覆盖率: 持续提升', '功率: 60-480kW'], upstream: ['充电模块', '配电设备', '电缆'], downstream: ['充电服务', '电网调度', '商业地产'] },
+            '光伏': { id: 'solar', name: '光伏', type: 'industry', description: '利用半导体材料光电效应将光能转换为电能的技术产业。', meta: ['装机量: 持续增长', '成本下降: 显著'], upstream: ['硅料', '光伏玻璃', '银浆', '逆变器'], downstream: ['光伏电站', '分布式发电', '储能系统'] },
+            '硅料': { id: 'silicon_material', name: '硅料', type: 'material', description: '光伏电池的核心原材料，多晶硅纯度要求极高。', meta: ['纯度: 99.9999%', '能耗: 高'], upstream: ['石英砂', '电力', '氯气'], downstream: ['光伏', '半导体', '硅片'] },
+            '逆变器': { id: 'inverter', name: '逆变器', type: 'product', description: '将直流电转换为交流电的核心设备。', meta: ['技术壁垒: 中高', '国产化: 高'], upstream: ['IGBT', '电容', '磁性元件'], downstream: ['光伏', '储能系统', '风电'] },
+            '人工智能': { id: 'ai', name: '人工智能', type: 'industry', description: '模拟人类智能的技术体系，包括机器学习、深度学习、自然语言处理等。', meta: ['市场规模: 万亿级', '增速: 40%+'], upstream: ['GPU芯片', '数据中心', '训练数据', '算法框架'], downstream: ['智能客服', '自动驾驶', '医疗AI', '金融科技'] },
+            'GPU芯片': { id: 'gpu', name: 'GPU芯片', type: 'product', description: '图形处理器，AI训练和推理的核心硬件。', meta: ['市场主导: 英伟达', '需求爆发'], upstream: ['晶圆代工', '封装测试', 'HBM存储'], downstream: ['人工智能', '游戏', '数据中心', '自动驾驶'] },
+            '数据中心': { id: 'datacenter', name: '数据中心', type: 'product', description: '承载AI训练和推理的基础设施。', meta: ['能耗: 高', '建设周期: 长'], upstream: ['服务器', '网络设备', '制冷系统', '电力'], downstream: ['人工智能', '云计算', '大数据'] },
+            '钢铁': { id: 'steel', name: '钢铁', type: 'industry', description: '以铁矿石为原料冶炼的金属材料，工业基础原材料。', meta: ['产量: 全球第一', '碳排放: 高'], upstream: ['铁矿石', '焦煤', '废钢', '石灰石'], downstream: ['建筑', '汽车', '机械', '家电', '造船'] },
+            '铁矿石': { id: 'iron_ore', name: '铁矿石', type: 'material', description: '钢铁生产的主要原料，全球主要产地为澳大利亚、巴西。', meta: ['进口依赖: 高', '价格波动: 大'], upstream: ['采矿设备', '运输'], downstream: ['钢铁', '生铁'] },
+            '焦煤': { id: 'coking_coal', name: '焦煤', type: 'material', description: '炼焦用煤，是钢铁冶炼的重要燃料和还原剂。', meta: ['资源稀缺', '战略价值: 高'], upstream: ['煤矿开采', '洗选'], downstream: ['钢铁', '焦炭'] },
+            '石油': { id: 'oil', name: '石油', type: 'industry', description: '重要的化石能源和化工原料，被称为"工业血液"。', meta: ['战略资源', '价格影响全球'], upstream: ['油田开采', '钻井设备', '管道运输'], downstream: ['汽油', '柴油', '化工原料', '塑料', '化肥'] },
+            '化工原料': { id: 'chem_material', name: '化工原料', type: 'material', description: '石油化工产品，是众多工业品的基础原料。', meta: ['品类繁多', '应用广泛'], upstream: ['石油', '天然气'], downstream: ['塑料', '橡胶', '化纤', '农药', '医药'] },
+            '云计算': { id: 'cloud', name: '云计算', type: 'industry', description: '通过互联网提供计算资源和服务的技术模式。', meta: ['市场规模: 万亿级', '增速: 25%+'], upstream: ['数据中心', '服务器', '网络带宽', '操作系统'], downstream: ['SaaS软件', '人工智能', '大数据', '物联网'] },
+            '服务器': { id: 'server', name: '服务器', type: 'product', description: '提供计算和存储服务的高性能计算机。', meta: ['需求持续增长', '国产化推进'], upstream: ['CPU', 'GPU芯片', '内存', '硬盘', '主板'], downstream: ['云计算', '数据中心', '企业IT'] },
+            '机器人': { id: 'robot', name: '机器人', type: 'industry', description: '能自动执行任务的机械装置，包括工业机器人和服务机器人。', meta: ['市场规模: 千亿级', '增速: 20%+'], upstream: ['伺服电机', '减速器', '控制器', '传感器'], downstream: ['汽车制造', '电子制造', '物流仓储', '医疗'] },
+            '减速器': { id: 'reducer', name: '减速器', type: 'product', description: '机器人核心零部件，传递扭矩并降低转速。', meta: ['技术壁垒: 高', '日本垄断: 强'], upstream: ['精密齿轮', '轴承', '特种钢'], downstream: ['机器人', '数控机床', '风电'] },
+            '伺服电机': { id: 'servo', name: '伺服电机', type: 'product', description: '机器人关节驱动核心，精确控制位置和速度。', meta: ['精度要求: 高', '国产化: 推进中'], upstream: ['永磁材料', '编码器', '驱动器'], downstream: ['机器人', '数控机床', '自动化设备'] },
+            '风电': { id: 'wind', name: '风电', type: 'industry', description: '利用风能发电的清洁能源产业。', meta: ['装机量: 快速增长', '海上风电: 趋势'], upstream: ['风机叶片', '主轴承', '齿轮箱', '发电机'], downstream: ['电网', '储能系统', '绿电交易'] },
+            '医药': { id: 'pharma', name: '医药', type: 'industry', description: '研发、生产和销售药品的产业，包括化学药、生物药、中药。', meta: ['市场规模: 万亿级', '研发周期: 长'], upstream: ['化工原料', '生物原料', '医疗器械', '实验设备'], downstream: ['医院', '药店', '医保', '患者'] },
+            '半导体': { id: 'semiconductor', name: '半导体', type: 'industry', description: '电子信息产业的基础，包括芯片设计、制造、封测全产业链。', meta: ['战略地位: 极高', '国产化: 迫切'], upstream: ['硅片', '光刻机', '光刻胶', 'EDA软件', '特种气体'], downstream: ['芯片', '消费电子', '汽车电子', '工业控制'] },
+            '光刻机': { id: 'lithography', name: '光刻机', type: 'product', description: '芯片制造核心设备，ASML垄断高端市场。', meta: ['技术壁垒: 极高', '荷兰ASML垄断'], upstream: ['光学镜头', '激光器', '精密机械'], downstream: ['半导体', '芯片制造'] },
+            '储能系统': { id: 'storage', name: '储能系统', type: 'product', description: '将电能存储并在需要时释放的系统。', meta: ['政策支持: 强', '应用广泛'], upstream: ['锂电池', '逆变器', 'BMS'], downstream: ['电网调峰', '新能源配储', '工商业储能'] },
+            '锂矿': { id: 'lithium', name: '锂矿', type: 'material', description: '锂电池主要原材料，全球资源集中在南美和澳洲。', meta: ['资源集中度: 高', '价格波动: 大'], upstream: ['采矿设备', '勘探技术'], downstream: ['锂电池', '玻璃陶瓷'] },
         };
 
-        // WikiData SPARQL 查询：获取实体的上下游/相关产业
-        async function fetchWikidataRelations(qid, label) {
-            const sparqlQuery = `
-SELECT DISTINCT ?item ?itemLabel ?relation WHERE {
-  {
-    wd:${qid} wdt:P186 ?item .
-    BIND("原材料" AS ?relation)
-  } UNION {
-    ?item wdt:P186 wd:${qid} .
-    BIND("下游产品" AS ?relation)
-  } UNION {
-    wd:${qid} wdt:P279 ?item .
-    BIND("上位类" AS ?relation)
-  } UNION {
-    ?item wdt:P279 wd:${qid} .
-    BIND("子类" AS ?relation)
-  } UNION {
-    wd:${qid} wdt:P1056 ?item .
-    BIND("产出" AS ?relation)
-  } UNION {
-    wd:${qid} wdt:P2283 ?item .
-    BIND("使用" AS ?relation)
-  } UNION {
-    ?item wdt:P2283 wd:${qid} .
-    BIND("被使用于" AS ?relation)
-  }
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "zh,en". }
-}
-LIMIT 30`;
-
-            const url = `https://query.wikidata.org/sparql?query=${encodeURIComponent(sparqlQuery)}&format=json`;
-
-            const response = await fetch(url, {
-                headers: { 'Accept': 'application/sparql-results+json' }
-            });
-
-            if (!response.ok) throw new Error('WikiData API 请求失败');
-            const data = await response.json();
-            return data.results.bindings;
-        }
-
-        // 获取实体描述
-        async function fetchWikidataDescription(qid) {
-            const url = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${qid}&languages=zh|en&props=labels|descriptions&format=json&origin=*`;
+        // WikiData REST API 搜索（支持 CORS）
+        async function searchWikidataREST(keyword) {
             try {
-                const response = await fetch(url);
-                const data = await response.json();
-                const entity = data.entities[qid];
-                const label = entity.labels?.zh?.value || entity.labels?.en?.value || qid;
-                const desc = entity.descriptions?.zh?.value || entity.descriptions?.en?.value || '';
-                return { label, desc };
-            } catch {
-                return { label: qid, desc: '' };
-            }
-        }
-
-        // 搜索 WikiData 实体（支持中文关键词）
-        async function searchWikidataEntity(keyword) {
-            // 先查本地映射
-            if (KEYWORD_QID_MAP[keyword]) {
-                const info = await fetchWikidataDescription(KEYWORD_QID_MAP[keyword]);
-                return { qid: KEYWORD_QID_MAP[keyword], label: info.label || keyword, desc: info.desc };
-            }
-
-            // 调用 WikiData 搜索 API
-            const url = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(keyword)}&language=zh&limit=5&format=json&origin=*`;
-            const response = await fetch(url);
-            const data = await response.json();
-
-            if (!data.search || data.search.length === 0) {
-                // 尝试英文搜索
-                const urlEn = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(keyword)}&language=en&limit=5&format=json&origin=*`;
-                const respEn = await fetch(urlEn);
+                // 中文搜索
+                const url = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(keyword)}&language=zh&limit=3&format=json&origin=*`;
+                const resp = await fetch(url, { signal: AbortSignal.timeout(8000) });
+                const data = await resp.json();
+                if (data.search && data.search.length > 0) {
+                    return data.search[0];
+                }
+                // 英文兜底
+                const urlEn = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(keyword)}&language=en&limit=3&format=json&origin=*`;
+                const respEn = await fetch(urlEn, { signal: AbortSignal.timeout(8000) });
                 const dataEn = await respEn.json();
-                if (!dataEn.search || dataEn.search.length === 0) return null;
-                const first = dataEn.search[0];
-                return { qid: first.id, label: first.label, desc: first.description || '' };
+                if (dataEn.search && dataEn.search.length > 0) return dataEn.search[0];
+            } catch (e) {
+                console.warn('WikiData 搜索失败:', e.message);
             }
-
-            const first = data.search[0];
-            return { qid: first.id, label: first.label || keyword, desc: first.description || '' };
+            return null;
         }
 
-        // 将 WikiData 关系分类为上游/下游
-        function classifyRelation(relation) {
-            const upstream = ['原材料', '使用', '上位类'];
-            const downstream = ['下游产品', '产出', '被使用于', '子类'];
-            if (upstream.includes(relation)) return 'upstream';
-            if (downstream.includes(relation)) return 'downstream';
-            return 'related';
+        // WikiData 获取实体详情（P31 类型、P279 上位类、P186 材料、P1056 产出）
+        async function fetchWikidataEntity(qid) {
+            try {
+                const url = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${qid}&languages=zh|en&props=labels|descriptions|claims&format=json&origin=*`;
+                const resp = await fetch(url, { signal: AbortSignal.timeout(10000) });
+                const data = await resp.json();
+                return data.entities?.[qid] || null;
+            } catch (e) {
+                console.warn('WikiData 实体获取失败:', e.message);
+                return null;
+            }
         }
 
-        // 主查询函数：联网查询 WikiData
+        // 从 WikiData claims 中提取关联 QID 列表
+        function extractClaims(entity, propId) {
+            const claims = entity?.claims?.[propId] || [];
+            return claims
+                .filter(c => c.mainsnak?.datavalue?.type === 'wikibase-entityid')
+                .map(c => c.mainsnak.datavalue.value.id)
+                .slice(0, 8);
+        }
+
+        // 批量获取 QID 的中文标签
+        async function fetchLabels(qids) {
+            if (!qids.length) return {};
+            try {
+                const url = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${qids.join('|')}&languages=zh|en&props=labels|descriptions&format=json&origin=*`;
+                const resp = await fetch(url, { signal: AbortSignal.timeout(10000) });
+                const data = await resp.json();
+                const result = {};
+                for (const [id, ent] of Object.entries(data.entities || {})) {
+                    result[id] = {
+                        label: ent.labels?.zh?.value || ent.labels?.en?.value || id,
+                        desc: ent.descriptions?.zh?.value || ent.descriptions?.en?.value || ''
+                    };
+                }
+                return result;
+            } catch (e) {
+                return {};
+            }
+        }
+
+        // 主查询函数
         async function queryKnowledgeGraph(keyword, depth = 2) {
             showLoading(true);
 
             try {
-                // 1. 搜索主实体
-                const entity = await searchWikidataEntity(keyword);
+                // 1. 优先查本地知识库
+                const localResult = buildGraphData(keyword, depth);
+                if (localResult.nodes.length > 1) {
+                    showLoading(false);
+                    return localResult;
+                }
 
-                if (!entity) {
+                // 2. 联网查询 WikiData
+                const searchResult = await searchWikidataREST(keyword);
+                if (!searchResult) {
                     showLoading(false);
                     return { nodes: [], links: [] };
                 }
 
+                const qid = searchResult.id;
+                const centerLabel = searchResult.label || keyword;
+                const centerDesc = searchResult.description || `${centerLabel} 的产业链结构`;
+
+                // 3. 获取实体详情
+                const entity = await fetchWikidataEntity(qid);
+
+                // 提取关联属性
+                // P186: 材料/原料（上游）
+                // P2283: 使用（上游）
+                // P1056: 产出（下游）
+                // P279: 上位类（上游）
+                // P31: 类型
+                const upstreamQids = [
+                    ...extractClaims(entity, 'P186'),
+                    ...extractClaims(entity, 'P2283'),
+                ].slice(0, 8);
+
+                const downstreamQids = [
+                    ...extractClaims(entity, 'P1056'),
+                ].slice(0, 8);
+
+                const relatedQids = [
+                    ...extractClaims(entity, 'P279'),
+                ].slice(0, 4);
+
+                const allQids = [...new Set([...upstreamQids, ...downstreamQids, ...relatedQids])];
+
+                if (allQids.length === 0) {
+                    showLoading(false);
+                    return { nodes: [], links: [] };
+                }
+
+                // 4. 批量获取标签
+                const labels = await fetchLabels(allQids);
+
+                // 5. 构建图谱
                 const nodes = [];
                 const links = [];
-                const nodeMap = new Map();
+                const nodeMap = new Set();
 
-                // 添加中心节点
-                const centerId = entity.qid;
+                // 中心节点
                 nodes.push({
-                    id: centerId,
-                    name: entity.label,
+                    id: qid,
+                    name: centerLabel,
                     type: 'industry',
-                    description: entity.desc || `${entity.label} 的产业链结构`,
-                    meta: [`数据来源: WikiData`, `实体ID: ${centerId}`],
+                    description: centerDesc,
+                    meta: [`数据来源: WikiData`, `实体ID: ${qid}`],
                     isCenter: true,
                     level: depth,
                     direction: 'center'
                 });
-                nodeMap.set(centerId, true);
+                nodeMap.add(qid);
 
-                // 2. 查询关联实体
-                const relations = await fetchWikidataRelations(entity.qid, entity.label);
+                const addNode = (id, direction, relLabel) => {
+                    const info = labels[id];
+                    if (!info) return;
+                    const lbl = info.label;
+                    // 过滤掉纯 QID 标签
+                    if (/^Q\d+$/.test(lbl)) return;
+                    if (nodeMap.has(id)) return;
+                    nodeMap.add(id);
 
-                // 3. 构建节点和边
-                const seen = new Set();
-                for (const rel of relations) {
-                    const itemId = rel.item.value.split('/').pop();
-                    const itemLabel = rel.itemLabel?.value || itemId;
-                    const relType = rel.relation?.value || 'related';
-
-                    // 过滤掉 QID 格式的标签（未翻译）
-                    if (itemLabel.startsWith('Q') && /^Q\d+$/.test(itemLabel)) continue;
-                    if (seen.has(itemId)) continue;
-                    seen.add(itemId);
-
-                    const direction = classifyRelation(relType);
-
-                    if (!nodeMap.has(itemId)) {
-                        nodes.push({
-                            id: itemId,
-                            name: itemLabel,
-                            type: direction === 'upstream' ? 'material' : 'product',
-                            description: `${itemLabel}（${relType}关系）`,
-                            meta: [`关系: ${relType}`, `数据来源: WikiData`],
-                            level: 1,
-                            direction: direction
-                        });
-                        nodeMap.set(itemId, true);
-                    }
+                    nodes.push({
+                        id,
+                        name: lbl,
+                        type: direction === 'upstream' ? 'material' : 'product',
+                        description: info.desc || `${lbl}（${relLabel}）`,
+                        meta: [`关系: ${relLabel}`, `数据来源: WikiData`],
+                        level: 1,
+                        direction
+                    });
 
                     links.push({
-                        source: direction === 'upstream' ? itemId : centerId,
-                        target: direction === 'upstream' ? centerId : itemId,
-                        type: relType,
-                        label: relType
+                        source: direction === 'upstream' ? id : qid,
+                        target: direction === 'upstream' ? qid : id,
+                        type: relLabel,
+                        label: relLabel
                     });
-                }
+                };
 
-                // 4. 如果 WikiData 数据不足，补充本地知识库数据
-                if (nodes.length <= 1) {
-                    showLoading(false);
-                    // 回退到本地数据
-                    const localResult = buildGraphData(keyword, depth);
-                    if (localResult.nodes.length > 0) return localResult;
-                    return { nodes: [], links: [] };
-                }
+                upstreamQids.forEach(id => addNode(id, 'upstream', '原材料/依赖'));
+                downstreamQids.forEach(id => addNode(id, 'downstream', '产出/应用'));
+                relatedQids.forEach(id => addNode(id, 'upstream', '上位类'));
 
                 showLoading(false);
+
+                if (nodes.length <= 1) return { nodes: [], links: [] };
                 return { nodes, links };
 
             } catch (error) {
-                console.error('WikiData 查询失败:', error);
+                console.error('查询失败:', error);
                 showLoading(false);
-                // 回退到本地数据
                 return buildGraphData(keyword, depth);
             }
         }
