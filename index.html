@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>产业链知识图谱查询</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            overflow: hidden;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* 左侧面板 */
+        .sidebar {
+            width: 360px;
+            background: #fff;
+            border-right: 1px solid #e1e4e8;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #e1e4e8;
+        }
+        
+        .sidebar-header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+        }
+        
+        .sidebar-header p {
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .search-box {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e1e4e8;
+        }
+        
+        .search-input-wrapper {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        
+        .search-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .search-btn {
+            padding: 10px 18px;
+            background: #3b82f6;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .search-btn:hover {
+            background: #2563eb;
+        }
+        
+        .search-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .examples {
+            padding: 12px 20px;
+            background: #f9fafb;
+            border-bottom: 1px solid #e1e4e8;
+        }
+        
+        .examples-title {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+        
+        .example-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .example-tag {
+            padding: 4px 10px;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 12px;
+            color: #4b5563;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .example-tag:hover {
+            background: #eff6ff;
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+        
+        /* 节点详情面板 */
+        .node-detail {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .node-detail-placeholder {
+            text-align: center;
+            padding: 40px 20px;
+            color: #9ca3af;
+        }
+        
+        .node-detail-placeholder svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+        
+        .node-info {
+            background: #fff;
+            border: 1px solid #e1e4e8;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .node-info-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .node-type-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .node-type-badge.product { background: #dbeafe; color: #1d4ed8; }
+        .node-type-badge.company { background: #dcfce7; color: #15803d; }
+        .node-type-badge.material { background: #fef3c7; color: #b45309; }
+        .node-type-badge.event { background: #fce7f3; color: #be185d; }
+        .node-type-badge.industry { background: #e0e7ff; color: #4338ca; }
+        
+        .node-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+        
+        .node-description {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #4b5563;
+            margin-bottom: 12px;
+        }
+        
+        .node-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .node-meta-item {
+            padding: 4px 8px;
+            background: #f3f4f6;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .expand-btn {
+            width: 100%;
+            padding: 10px;
+            background: #f9fafb;
+            border: 1px solid #e1e4e8;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #3b82f6;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 12px;
+        }
+        
+        .expand-btn:hover {
+            background: #eff6ff;
+            border-color: #3b82f6;
+        }
+        
+        /* 图例 */
+        .legend {
+            padding: 16px 20px;
+            border-top: 1px solid #e1e4e8;
+            background: #f9fafb;
+        }
+        
+        .legend-title {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+        
+        .legend-items {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: #4b5563;
+        }
+        
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+        
+        /* 右侧图谱区域 */
+        .graph-container {
+            flex: 1;
+            position: relative;
+            background: #fafbfc;
+        }
+        
+        #graph {
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* 图谱控制按钮 */
+        .graph-controls {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .graph-control-btn {
+            width: 36px;
+            height: 36px;
+            background: #fff;
+            border: 1px solid #e1e4e8;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+            color: #4b5563;
+            transition: all 0.2s;
+        }
+        
+        .graph-control-btn:hover {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+        }
+        
+        /* 加载状态 */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e5e7eb;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            margin-top: 12px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        /* 空状态 */
+        .empty-state {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #9ca3af;
+        }
+        
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+        
+        .empty-state h2 {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #6b7280;
+        }
+        
+        .empty-state p {
+            font-size: 14px;
+        }
+        
+        /* D3 图谱样式 */
+        .node circle {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .node:hover circle {
+            filter: brightness(0.9);
+        }
+        
+        .node text {
+            font-size: 12px;
+            pointer-events: none;
+        }
+        
+        .link {
+            fill: none;
+            stroke-opacity: 0.6;
+        }
+        
+        .link-arrow {
+            fill: #9ca3af;
+        }
+        
+        .link-label {
+            font-size: 10px;
+            fill: #6b7280;
+        }
+        
+        /* 节点tooltip */
+        .tooltip {
+            position: absolute;
+            background: #1f2937;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 1000;
+            max-width: 200px;
+        }
+        
+        /* 层级指示 */
+        .level-indicator {
+            position: absolute;
+            bottom: 16px;
+            left: 16px;
+            background: #fff;
+            border: 1px solid #e1e4e8;
+            border-radius: 8px;
+            padding: 12px 16px;
+        }
+        
+        .level-indicator-title {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+        
+        .level-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .level-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+        }
+        
+        .level-bar-label {
+            width: 60px;
+            color: #6b7280;
+        }
+        
+        .level-bar-dots {
+            display: flex;
+            gap: 3px;
+        }
+        
+        .level-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #e5e7eb;
+        }
+        
+        .level-dot.active {
+            background: #3b82f6;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 左侧面板 -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1>产业链知识图谱</h1>
+                <p>查询产业链上下游关系</p>
+            </div>
+            
+            <div class="search-box">
+                <div class="search-input-wrapper">
+                    <input type="text" class="search-input" id="searchInput" placeholder="输入产品、公司或事件...">
+                    <button class="search-btn" id="searchBtn">查询</button>
+                </div>
+            </div>
+            
+            <div class="examples">
+                <div class="examples-title">热门搜索</div>
+                <div class="example-tags">
+                    <span class="example-tag" data-query="新能源汽车">新能源汽车</span>
+                    <span class="example-tag" data-query="芯片">芯片</span>
+                    <span class="example-tag" data-query="锂电池">锂电池</span>
+                    <span class="example-tag" data-query="光伏">光伏</span>
+                    <span class="example-tag" data-query="AI大模型">AI大模型</span>
+                </div>
+            </div>
+            
+            <div class="node-detail" id="nodeDetail">
+                <div class="node-detail-placeholder">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2"/>
+                    </svg>
+                    <p>输入关键词开始查询</p>
+                    <p style="font-size: 12px; margin-top: 4px;">点击节点查看详情并展开</p>
+                </div>
+            </div>
+            
+            <div class="legend">
+                <div class="legend-title">图例说明</div>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #3b82f6;"></div>
+                        <span>产品/服务</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #22c55e;"></div>
+                        <span>公司/企业</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #f59e0b;"></div>
+                        <span>原材料</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ec4899;"></div>
+                        <span>事件</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #6366f1;"></div>
+                        <span>行业</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 右侧图谱区域 -->
+        <div class="graph-container">
+            <div id="graph"></div>
+            
+            <div class="empty-state" id="emptyState">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                    <circle cx="12" cy="12" r="3"/>
+                    <circle cx="19" cy="12" r="2"/>
+                    <circle cx="5" cy="12" r="2"/>
+                    <circle cx="12" cy="5" r="2"/>
+                    <circle cx="12" cy="19" r="2"/>
+                    <line x1="12" y1="9" x2="12" y2="7"/>
+                    <line x1="12" y1="17" x2="12" y2="15"/>
+                    <line x1="15" y1="12" x2="17" y2="12"/>
+                    <line x1="7" y1="12" x2="9" y2="12"/>
+                </svg>
+                <h2>开始探索产业链</h2>
+                <p>在左侧输入关键词查询产业链图谱</p>
+            </div>
+            
+            <div class="loading-overlay hidden" id="loadingOverlay">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">正在查询知识图谱...</div>
+            </div>
+            
+            <div class="graph-controls">
+                <button class="graph-control-btn" id="zoomIn" title="放大">+</button>
+                <button class="graph-control-btn" id="zoomOut" title="缩小">−</button>
+                <button class="graph-control-btn" id="resetZoom" title="重置">⟲</button>
+            </div>
+            
+            <div class="level-indicator hidden" id="levelIndicator">
+                <div class="level-indicator-title">查询深度</div>
+                <div class="level-bars">
+                    <div class="level-bar">
+                        <span class="level-bar-label">上游层级</span>
+                        <div class="level-bar-dots" id="upstreamDots">
+                            <div class="level-dot"></div>
+                            <div class="level-dot"></div>
+                            <div class="level-dot"></div>
+                        </div>
+                    </div>
+                    <div class="level-bar">
+                        <span class="level-bar-label">下游层级</span>
+                        <div class="level-bar-dots" id="downstreamDots">
+                            <div class="level-dot"></div>
+                            <div class="level-dot"></div>
+                            <div class="level-dot"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="tooltip hidden" id="tooltip"></div>
+
+    <script>
+        // 知识图谱数据模拟（实际可接入Wikidata、百度知心等API）
+        const knowledgeBase = {
+            // 新能源汽车产业链
+            '新能源汽车': {
+                id: 'ev',
+                name: '新能源汽车',
+                type: 'industry',
+                description: '采用非常规车用燃料作为动力来源，综合车辆动力控制和驱动方面的先进技术，形成的技术原理先进、具有新技术、新结构的汽车。',
+                meta: ['市场规模: 万亿级', '增长率: 30%+', '政策支持: 强'],
+                upstream: ['锂电池', '芯片', '电机', '车身材料'],
+                downstream: ['充电桩', '二手车市场', '汽车保险', '共享出行']
+            },
+            '锂电池': {
+                id: 'battery',
+                name: '锂电池',
+                type: 'product',
+                description: '一种可充电电池，主要由正极、负极、电解液和隔膜组成，是新能源汽车的核心零部件。',
+                meta: ['成本占比: 40%', '技术壁垒: 高', '市场规模: 千亿级'],
+                upstream: ['锂矿', '钴矿', '隔膜', '电解液'],
+                downstream: ['新能源汽车', '储能系统', '消费电子', '电动工具']
+            },
+            '芯片': {
+                id: 'chip',
+                name: '芯片',
+                type: 'product',
+                description: '汽车电子系统的核心，包括MCU、功率半导体、传感器等，是实现智能驾驶的关键硬件。',
+                meta: ['单车用量: 1000+', '国产化率: 15%', '进口依赖: 高'],
+                upstream: ['硅片', '光刻机', 'EDA软件', '特种气体'],
+                downstream: ['新能源汽车', '智能手机', '服务器', '物联网']
+            },
+            '电机': {
+                id: 'motor',
+                name: '电机',
+                type: 'product',
+                description: '新能源汽车的动力来源，将电能转换为机械能驱动车辆行驶。',
+                meta: ['效率: 95%+', '功率密度: 高', '成本占比: 10%'],
+                upstream: ['永磁材料', '硅钢片', '铜线', '轴承'],
+                downstream: ['新能源汽车', '工业机器人', '家电', '电动工具']
+            },
+            '车身材料': {
+                id: 'material',
+                name: '车身材料',
+                type: 'material',
+                description: '包括铝合金、高强度钢、碳纤维等轻量化材料，用于降低车重提升续航。',
+                meta: ['轻量化需求: 强', '成本敏感: 中', '技术门槛: 中'],
+                upstream: ['铝土矿', '铁矿石', '碳纤维原丝'],
+                downstream: ['新能源汽车', '航空航天', '轨道交通']
+            },
+            '充电桩': {
+                id: 'charger',
+                name: '充电桩',
+                type: 'product',
+                description: '为电动汽车提供充电服务的设备，包括直流快充和交流慢充两种类型。',
+                meta: ['覆盖率: 持续提升', '功率: 60-480kW', '政策推动: 强'],
+                upstream: ['充电模块', '配电设备', '电缆', '智能监控系统'],
+                downstream: ['充电服务', '电网调度', '商业地产']
+            },
+            '锂矿': {
+                id: 'lithium',
+                name: '锂矿',
+                type: 'material',
+                description: '锂电池的主要原材料，全球锂资源主要集中在南美和澳洲。',
+                meta: ['资源集中度: 高', '价格波动: 大', '战略价值: 高'],
+                upstream: ['采矿设备', '勘探技术'],
+                downstream: ['锂电池', '玻璃陶瓷', '润滑脂']
+            },
+            '钴矿': {
+                id: 'cobalt',
+                name: '钴矿',
+                type: 'material',
+                description: '锂电池正极材料的重要组成部分，主要产自刚果（金）。',
+                meta: ['资源集中: 刚果', '价格波动: 剧烈', '替代趋势: 明显'],
+                upstream: ['采矿设备', '精炼技术'],
+                downstream: ['锂电池', '高温合金', '催化剂']
+            },
+            '光伏': {
+                id: 'solar',
+                name: '光伏',
+                type: 'industry',
+                description: '利用半导体材料的光电效应直接将光能转换为电能的技术产业。',
+                meta: ['装机量: 持续增长', '成本下降: 显著', '清洁能源'],
+                upstream: ['硅料', '光伏玻璃', '银浆', '逆变器'],
+                downstream: ['光伏电站', '分布式发电', '储能系统']
+            },
+            'AI大模型': {
+                id: 'llm',
+                name: 'AI大模型',
+                type: 'product',
+                description: '基于Transformer架构的超大规模预训练语言模型，如GPT、Claude、文心一言等。',
+                meta: ['参数量: 千亿级', '训练成本: 高', '应用广泛'],
+                upstream: ['GPU芯片', '数据中心', '训练数据', '算法框架'],
+                downstream: ['智能客服', '内容创作', '代码生成', '知识问答']
+            },
+            'GPU芯片': {
+                id: 'gpu',
+                name: 'GPU芯片',
+                type: 'product',
+                description: '图形处理器，因其并行计算能力成为AI训练和推理的核心硬件。',
+                meta: ['市场主导: 英伟达', '需求爆发', '国产替代进行中'],
+                upstream: ['晶圆代工', '封装测试', 'HBM存储'],
+                downstream: ['AI大模型', '游戏', '数据中心', '自动驾驶']
+            },
+            '硅片': {
+                id: 'silicon',
+                name: '硅片',
+                type: 'material',
+                description: '半导体制造的基础材料，从硅锭切割而成的薄片。',
+                meta: ['纯度要求: 99.9999%', '尺寸: 12英寸主流', '国产化: 推进中'],
+                upstream: ['硅料', '切割设备'],
+                downstream: ['芯片', '光伏电池']
+            },
+            '储能系统': {
+                id: 'storage',
+                name: '储能系统',
+                type: 'product',
+                description: '将电能以各种形式存储，在需要时释放的能量存储系统。',
+                meta: ['类型: 电化学储能', '应用广泛', '政策支持'],
+                upstream: ['锂电池', '逆变器', 'BMS'],
+                downstream: ['电网调峰', '新能源配储', '工商业储能']
+            }
+        };
+
+        // 关系类型配置
+        const relationTypes = {
+            'supply': { label: '供应', color: '#22c55e' },
+            'produce': { label: '生产', color: '#3b82f6' },
+            'depend': { label: '依赖', color: '#f59e0b' },
+            'affect': { label: '影响', color: '#ec4899' }
+        };
+
+        // 节点类型配置
+        const nodeTypes = {
+            'product': { color: '#3b82f6', label: '产品/服务' },
+            'company': { color: '#22c55e', label: '公司/企业' },
+            'material': { color: '#f59e0b', label: '原材料' },
+            'event': { color: '#ec4899', label: '事件' },
+            'industry': { color: '#6366f1', label: '行业' }
+        };
+
+        // 全局变量
+        let simulation = null;
+        let svg = null;
+        let g = null;
+        let zoom = null;
+        let currentData = { nodes: [], links: [] };
+        let expandedNodes = new Set();
+
+        // 初始化图谱
+        function initGraph() {
+            const container = document.getElementById('graph');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            svg = d3.select('#graph')
+                .append('svg')
+                .attr('width', width)
+                .attr('height', height);
+
+            // 添加箭头标记
+            svg.append('defs').selectAll('marker')
+                .data(['arrow'])
+                .enter().append('marker')
+                .attr('id', 'arrow')
+                .attr('viewBox', '0 -5 10 10')
+                .attr('refX', 20)
+                .attr('refY', 0)
+                .attr('markerWidth', 6)
+                .attr('markerHeight', 6)
+                .attr('orient', 'auto')
+                .append('path')
+                .attr('d', 'M0,-5L10,0L0,5')
+                .attr('fill', '#9ca3af');
+
+            // 创建缩放行为
+            zoom = d3.zoom()
+                .scaleExtent([0.1, 4])
+                .on('zoom', (event) => {
+                    g.attr('transform', event.transform);
+                });
+
+            svg.call(zoom);
+
+            g = svg.append('g');
+
+            // 初始化力导向模拟
+            simulation = d3.forceSimulation()
+                .force('link', d3.forceLink().id(d => d.id).distance(120).strength(0.5))
+                .force('charge', d3.forceManyBody().strength(-400))
+                .force('center', d3.forceCenter(width / 2, height / 2))
+                .force('collision', d3.forceCollide().radius(40));
+
+            // 窗口大小调整
+            window.addEventListener('resize', () => {
+                const newWidth = container.clientWidth;
+                const newHeight = container.clientHeight;
+                svg.attr('width', newWidth).attr('height', newHeight);
+                simulation.force('center', d3.forceCenter(newWidth / 2, newHeight / 2));
+                simulation.alpha(1).restart();
+            });
+        }
+
+        // 查询知识图谱
+        async function queryKnowledgeGraph(keyword, depth = 3) {
+            showLoading(true);
+            
+            // 模拟API延迟
+            await new Promise(resolve => setTimeout(resolve, 800));
+            
+            const result = buildGraphData(keyword, depth);
+            showLoading(false);
+            
+            return result;
+        }
+
+        // 构建图谱数据
+        function buildGraphData(keyword, maxDepth) {
+            const nodes = [];
+            const links = [];
+            const visited = new Set();
+            
+            function traverse(name, depth, direction, parentId = null) {
+                if (depth === 0 || visited.has(name)) return;
+                
+                const node = knowledgeBase[name];
+                if (!node) return;
+                
+                visited.add(name);
+                nodes.push({
+                    id: node.id,
+                    name: node.name,
+                    type: node.type,
+                    description: node.description,
+                    meta: node.meta,
+                    level: depth,
+                    direction: direction
+                });
+                
+                if (parentId) {
+                    const relation = direction === 'upstream' ? 'depend' : 'produce';
+                    links.push({
+                        source: direction === 'upstream' ? node.id : parentId,
+                        target: direction === 'upstream' ? parentId : node.id,
+                        type: relation,
+                        depth: depth
+                    });
+                }
+                
+                // 递归上游
+                if (node.upstream && depth > 0) {
+                    node.upstream.forEach(up => traverse(up, depth - 1, 'upstream', node.id));
+                }
+                
+                // 递归下游
+                if (node.downstream && depth > 0) {
+                    node.downstream.forEach(down => traverse(down, depth - 1, 'downstream', node.id));
+                }
+            }
+            
+            // 从中心节点开始遍历
+            const centerNode = knowledgeBase[keyword];
+            if (centerNode) {
+                visited.add(keyword);
+                nodes.push({
+                    id: centerNode.id,
+                    name: centerNode.name,
+                    type: centerNode.type,
+                    description: centerNode.description,
+                    meta: centerNode.meta,
+                    level: maxDepth,
+                    direction: 'center',
+                    isCenter: true
+                });
+                
+                // 上游遍历
+                if (centerNode.upstream) {
+                    centerNode.upstream.forEach(up => traverse(up, maxDepth - 1, 'upstream', centerNode.id));
+                }
+                
+                // 下游遍历
+                if (centerNode.downstream) {
+                    centerNode.downstream.forEach(down => traverse(down, maxDepth - 1, 'downstream', centerNode.id));
+                }
+            }
+            
+            return { nodes, links };
+        }
+
+        // 渲染图谱
+        function renderGraph(data) {
+            currentData = data;
+            
+            // 清空现有图形
+            g.selectAll('*').remove();
+            
+            if (data.nodes.length === 0) {
+                document.getElementById('emptyState').classList.remove('hidden');
+                document.getElementById('levelIndicator').classList.add('hidden');
+                return;
+            }
+            
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('levelIndicator').classList.remove('hidden');
+            
+            // 更新层级指示器
+            updateLevelIndicator(data);
+            
+            // 创建链接
+            const link = g.append('g')
+                .selectAll('path')
+                .data(data.links)
+                .enter().append('path')
+                .attr('class', 'link')
+                .attr('stroke', '#d1d5db')
+                .attr('stroke-width', 1.5)
+                .attr('marker-end', 'url(#arrow)')
+                .attr('fill', 'none');
+
+            // 创建节点组
+            const node = g.append('g')
+                .selectAll('g')
+                .data(data.nodes)
+                .enter().append('g')
+                .attr('class', 'node')
+                .call(d3.drag()
+                    .on('start', dragstarted)
+                    .on('drag', dragged)
+                    .on('end', dragended));
+
+            // 添加节点圆形
+            node.append('circle')
+                .attr('r', d => d.isCenter ? 25 : 18)
+                .attr('fill', d => nodeTypes[d.type]?.color || '#6b7280')
+                .attr('stroke', '#fff')
+                .attr('stroke-width', d => d.isCenter ? 3 : 2)
+                .on('click', (event, d) => showNodeDetail(d))
+                .on('mouseover', showTooltip)
+                .on('mouseout', hideTooltip);
+
+            // 添加节点文字
+            node.append('text')
+                .attr('dy', d => d.isCenter ? 35 : 28)
+                .attr('text-anchor', 'middle')
+                .attr('fill', '#374151')
+                .attr('font-weight', d => d.isCenter ? '600' : '400')
+                .text(d => d.name.length > 6 ? d.name.slice(0, 6) + '...' : d.name);
+
+            // 更新模拟
+            simulation.nodes(data.nodes);
+            simulation.force('link').links(data.links);
+            simulation.alpha(1).restart();
+
+            simulation.on('tick', () => {
+                link.attr('d', d => {
+                    const dx = d.target.x - d.source.x;
+                    const dy = d.target.y - d.source.y;
+                    const dr = Math.sqrt(dx * dx + dy * dy) * 2;
+                    return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
+                });
+
+                node.attr('transform', d => `translate(${d.x},${d.y})`);
+            });
+        }
+
+        // 更新层级指示器
+        function updateLevelIndicator(data) {
+            const maxUpstream = Math.max(...data.nodes.filter(n => n.direction === 'upstream').map(n => n.level), 0);
+            const maxDownstream = Math.max(...data.nodes.filter(n => n.direction === 'downstream').map(n => n.level), 0);
+            
+            const upstreamDots = document.querySelectorAll('#upstreamDots .level-dot');
+            const downstreamDots = document.querySelectorAll('#downstreamDots .level-dot');
+            
+            upstreamDots.forEach((dot, i) => {
+                dot.classList.toggle('active', i < maxUpstream);
+            });
+            
+            downstreamDots.forEach((dot, i) => {
+                dot.classList.toggle('active', i < maxDownstream);
+            });
+        }
+
+        // 显示节点详情
+        function showNodeDetail(node) {
+            const detail = document.getElementById('nodeDetail');
+            const typeInfo = nodeTypes[node.type] || { color: '#6b7280', label: '未知' };
+            
+            detail.innerHTML = `
+                <div class="node-info">
+                    <div class="node-info-header">
+                        <span class="node-type-badge ${node.type}" style="background: ${typeInfo.color}20; color: ${typeInfo.color}">${typeInfo.label}</span>
+                    </div>
+                    <div class="node-title">${node.name}</div>
+                    <div class="node-description">${node.description || '暂无描述'}</div>
+                    <div class="node-meta">
+                        ${(node.meta || []).map(m => `<span class="node-meta-item">${m}</span>`).join('')}
+                    </div>
+                    <button class="expand-btn" onclick="expandNode('${node.name}')">
+                        从此节点展开查询 →
+                    </button>
+                </div>
+            `;
+        }
+
+        // 展开节点
+        async function expandNode(nodeName) {
+            const data = await queryKnowledgeGraph(nodeName, 3);
+            expandedNodes.add(nodeName);
+            renderGraph(data);
+            
+            // 自动显示展开节点的详情
+            const centerNode = data.nodes.find(n => n.name === nodeName);
+            if (centerNode) {
+                showNodeDetail(centerNode);
+            }
+        }
+
+        // 显示提示框
+        function showTooltip(event, d) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.textContent = `${d.name} (${nodeTypes[d.type]?.label || '未知'})`;
+            tooltip.style.left = event.pageX + 10 + 'px';
+            tooltip.style.top = event.pageY - 10 + 'px';
+            tooltip.classList.remove('hidden');
+        }
+
+        // 隐藏提示框
+        function hideTooltip() {
+            document.getElementById('tooltip').classList.add('hidden');
+        }
+
+        // 显示/隐藏加载状态
+        function showLoading(show) {
+            document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
+        }
+
+        // 拖拽函数
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+
+        // 缩放控制
+        document.getElementById('zoomIn').addEventListener('click', () => {
+            svg.transition().duration(300).call(zoom.scaleBy, 1.3);
+        });
+
+        document.getElementById('zoomOut').addEventListener('click', () => {
+            svg.transition().duration(300).call(zoom.scaleBy, 0.7);
+        });
+
+        document.getElementById('resetZoom').addEventListener('click', () => {
+            svg.transition().duration(300).call(zoom.transform, d3.zoomIdentity);
+        });
+
+        // 搜索功能
+        async function performSearch(keyword) {
+            if (!keyword.trim()) return;
+            
+            const btn = document.getElementById('searchBtn');
+            btn.disabled = true;
+            btn.textContent = '查询中...';
+            
+            try {
+                const data = await queryKnowledgeGraph(keyword, 3);
+                if (data.nodes.length === 0) {
+                    alert('未找到相关产业链信息，请尝试其他关键词');
+                    return;
+                }
+                renderGraph(data);
+                
+                // 显示中心节点详情
+                const centerNode = data.nodes.find(n => n.isCenter);
+                if (centerNode) {
+                    showNodeDetail(centerNode);
+                }
+            } catch (error) {
+                console.error('查询失败:', error);
+                alert('查询失败，请稍后重试');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '查询';
+            }
+        }
+
+        // 事件绑定
+        document.getElementById('searchBtn').addEventListener('click', () => {
+            const keyword = document.getElementById('searchInput').value;
+            performSearch(keyword);
+        });
+
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                performSearch(e.target.value);
+            }
+        });
+
+        // 示例标签点击
+        document.querySelectorAll('.example-tag').forEach(tag => {
+            tag.addEventListener('click', () => {
+                const query = tag.dataset.query;
+                document.getElementById('searchInput').value = query;
+                performSearch(query);
+            });
+        });
+
+        // 初始化
+        initGraph();
+    </script>
+</body>
+</html>
