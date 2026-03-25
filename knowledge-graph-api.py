@@ -4,12 +4,14 @@
 """
 
 from flask import Flask, request, jsonify, g
+from flask_cors import CORS
 import sqlite3
 import json
 import os
 from datetime import datetime
 
 app = Flask(__name__)
+CORS(app)  # 允许跨域请求
 app.config['DATABASE'] = 'knowledge_graph.db'
 
 # ============================================================
