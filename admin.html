@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识图谱管理后台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: #f5f7fa;
+            color: #1e293b;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+            color: white;
+            padding: 24px 40px;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            font-size: 14px;
+            opacity: 0.85;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px 40px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-success {
+            background: #22c55e;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        th {
+            background: #f8fafc;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+        
+        tr:hover {
+            background: #f8fafc;
+        }
+        
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .tag-industry { background: #dbeafe; color: #1d4ed8; }
+        .tag-product { background: #dcfce7; color: #15803d; }
+        .tag-material { background: #fef3c7; color: #b45309; }
+        .tag-event { background: #fce7f3; color: #be185d; }
+        
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        /* 表单 */
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #374151;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        
+        .form-input:focus {
+            border-color: #3b82f6;
+        }
+        
+        textarea.form-input {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        
+        /* 模态框 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal.hidden {
+            display: none;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #f1f5f9;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            color: #64748b;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        /* API 文档 */
+        .api-endpoint {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .api-method {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+        
+        .api-method.get { background: #dbeafe; color: #1d4ed8; }
+        .api-method.post { background: #dcfce7; color: #15803d; }
+        .api-method.put { background: #fef3c7; color: #b45309; }
+        .api-method.delete { background: #fce7f3; color: #be185d; }
+        
+        .api-path {
+            font-family: monospace;
+            font-size: 14px;
+            color: #1e293b;
+        }
+        
+        .api-desc {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #64748b;
+        }
+        
+        .api-code {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 8px;
+            overflow-x: auto;
+        }
+        
+        /* 搜索框 */
+        .search-box {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .search-box input {
+            flex: 1;
+            padding: 10px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+        
+        .search-box input:focus {
+            border-color: #3b82f6;
+        }
+        
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-item {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+        
+        /* 提示信息 */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 14px 24px;
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+        }
+        
+        .toast.success { background: #22c55e; }
+        .toast.error { background: #ef4444; }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏭 产业链知识图谱 - 管理后台</h1>
+        <p>数据库管理 · 字段配置 · Agent 接口文档</p>
+    </div>
+    
+    <div class="container">
+        <!-- 统计 -->
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-value" id="statNodes">-</div>
+                <div class="stat-label">节点总数</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="statCategories">-</div>
+                <div class="stat-label">产业分类</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="statFields">-</div>
+                <div class="stat-label">数据字段</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="statNotFound">-</div>
+                <div class="stat-label">未找到搜索</div>
+            </div>
+        </div>
+        
+        <!-- 节点管理 -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">📊 节点管理</h2>
+                <button class="btn btn-primary" onclick="openNodeModal()">+ 添加节点</button>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="搜索节点名称或描述...">
+                <button class="btn btn-primary" onclick="searchNodes()">搜索</button>
+                <button class="btn" onclick="loadNodes()">重置</button>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>名称</th>
+                        <th>分类</th>
+                        <th>类型</th>
+                        <th>描述</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="nodesTable">
+                    <tr><td colspan="6" style="text-align:center;color:#94a3b8;">加载中...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 字段管理 -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">⚙️ 字段配置</h2>
+                <button class="btn btn-primary" onclick="openFieldModal()">+ 添加字段</button>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>字段名</th>
+                        <th>标签</th>
+                        <th>类型</th>
+                        <th>必填</th>
+                        <th>显示</th>
+                        <th>可编辑</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="fieldsTable">
+                    <tr><td colspan="7" style="text-align:center;color:#94a3b8;">加载中...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- API 文档 -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">🔌 Agent API 接口</h2>
+            </div>
+            
+            <p style="margin-bottom: 16px; color: #64748b;">
+                以下 API 可供 Agent 调用，用于查询和修改数据库。Base URL: <code>http://localhost:5000/api</code>
+            </p>
+            
+            <div class="api-endpoint">
+                <span class="api-method get">GET</span>
+                <span class="api-path">/api/nodes</span>
+                <p class="api-desc">获取所有节点，或通过 ?keyword=xxx 搜索</p>
+                <div class="api-code">curl http://localhost:5000/api/nodes?keyword=AI</div>
+            </div>
+            
+            <div class="api-endpoint">
+                <span class="api-method get">GET</span>
+                <span class="api-path">/api/nodes/:id</span>
+                <p class="api-desc">获取单个节点详情</p>
+                <div class="api-code">curl http://localhost:5000/api/nodes/1</div>
+            </div>
+            
+            <div class="api-endpoint">
+                <span class="api-method post">POST</span>
+                <span class="api-path">/api/nodes</span>
+                <p class="api-desc">创建新节点</p>
+                <div class="api-code">curl -X POST http://localhost:5000/api/nodes \
+  -H "Content-Type: application/json" \
+  -d '{"name":"新节点","category":"新能源","node_type":"product","description":"描述..."}'</div>
+            </div>
+            
+            <div class="api-endpoint">
+                <span class="api-method put">PUT</span>
+                <span class="api-path">/api/nodes/:id</span>
+                <p class="api-desc">更新节点</p>
+                <div class="api-code">curl -X PUT http://localhost:5000/api/nodes/1 \
+  -H "Content-Type: application/json" \
+  -d '{"description":"更新后的描述","upstream":["原材料A"]}'</div>
+            </div>
+            
+            <div class="api-endpoint">
+                <span class="api-method delete">DELETE</span>
+                <span class="api-path">/api/nodes/:id</span>
+                <p class="api-desc">删除节点</p>
+                <div class="api-code">curl -X DELETE http://localhost:5000/api/nodes/1</div>
+            </div>
+            
+            <div class="api-endpoint">
+                <span class="api-method get">GET</span>
+                <span class="api-path">/api/graph?keyword=xxx</span>
+                <p class="api-desc">获取图谱数据（上下各5层）</p>
+                <div class="api-code">curl http://localhost:5000/api/graph?keyword=锂电池</div>
+            </div>
+            
+            <div class="api-endpoint">
+                <span class="api-method get">GET</span>
+                <span class="api-path">/api/fields</span>
+                <p class="api-desc">获取字段配置列表</p>
+            </div>
+            
+            <div class="api-endpoint">
+                <span class="api-method post">POST</span>
+                <span class="api-path">/api/fields</span>
+                <p class="api-desc">添加新字段</p>
+                <div class="api-code">curl -X POST http://localhost:5000/api/fields \
+  -H "Content-Type: application/json" \
+  -d '{"name":"region","label":"地区","field_type":"text"}'</div>
+            </div>
+            
+            <div class="api-endpoint">
+                <span class="api-method get">GET</span>
+                <span class="api-path">/api/logs</span>
+                <p class="api-desc">查看搜索日志（包含未找到的关键词）</p>
+            </div>
+            
+            <div class="api-endpoint">
+                <span class="api-method get">GET</span>
+                <span class="api-path">/api/stats</span>
+                <p class="api-desc">获取统计信息</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 节点模态框 -->
+    <div class="modal hidden" id="nodeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="nodeModalTitle">添加节点</h3>
+                <button class="modal-close" onclick="closeNodeModal()">×</button>
+            </div>
+            <form id="nodeForm">
+                <input type="hidden" id="nodeId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">名称 *</label>
+                        <input type="text" class="form-input" id="nodeName" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">分类</label>
+                        <input type="text" class="form-input" id="nodeCategory" placeholder="如：AI人工智能">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">类型</label>
+                        <select class="form-input" id="nodeType">
+                            <option value="industry">行业</option>
+                            <option value="product" selected>产品</option>
+                            <option value="material">材料</option>
+                            <option value="event">事件</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">描述</label>
+                    <textarea class="form-input" id="nodeDescription" placeholder="描述信息..."></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">上游 (用逗号分隔)</label>
+                        <input type="text" class="form-input" id="nodeUpstream" placeholder="原材料A, 零部件B">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">下游 (用逗号分隔)</label>
+                        <input type="text" class="form-input" id="nodeDownstream" placeholder="应用场景A, 产品B">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">关键信息 (用逗号分隔)</label>
+                    <input type="text" class="form-input" id="nodeMeta" placeholder="信息A, 信息B">
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeNodeModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveNode()">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 字段模态框 -->
+    <div class="modal hidden" id="fieldModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="fieldModalTitle">添加字段</h3>
+                <button class="modal-close" onclick="closeFieldModal()">×</button>
+            </div>
+            <form id="fieldForm">
+                <input type="hidden" id="fieldId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">字段名 *</label>
+                        <input type="text" class="form-input" id="fieldName" required placeholder="如：region">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">显示标签 *</label>
+                        <input type="text" class="form-input" id="fieldLabel" required placeholder="如：地区">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">字段类型</label>
+                        <select class="form-input" id="fieldType">
+                            <option value="text">文本</option>
+                            <option value="textarea">多行文本</option>
+                            <option value="number">数字</option>
+                            <option value="select">下拉选择</option>
+                            <option value="tags">标签列表</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">选项 (select/tags类型用，逗号分隔)</label>
+                        <input type="text" class="form-input" id="fieldOptions" placeholder="选项A, 选项B">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <input type="checkbox" id="fieldRequired"> 必填字段
+                        </label>
+                    </div>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeFieldModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveField()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        
+        // 初始化
+        async function init() {
+            await loadStats();
+            await loadNodes();
+            await loadFields();
+        }
+        
+        // 加载统计
+        async function loadStats() {
+            try {
+                const res = await fetch(`${API_BASE}/stats`);
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('statNodes').textContent = data.data.node_count;
+                    document.getElementById('statCategories').textContent = data.data.category_count;
+                    document.getElementById('statFields').textContent = data.data.field_count;
+                    document.getElementById('statNotFound').textContent = data.data.not_found_count;
+                }
+            } catch (e) {
+                console.error('加载统计失败:', e);
+            }
+        }
+        
+        // 加载节点
+        async function loadNodes(keyword = '') {
+            try {
+                const url = keyword 
+                    ? `${API_BASE}/nodes?keyword=${encodeURIComponent(keyword)}`
+                    : `${API_BASE}/nodes`;
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                const tbody = document.getElementById('nodesTable');
+                if (!data.success || data.data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#94a3b8;">暂无数据</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = data.data.map(node => `
+                    <tr>
+                        <td>${node.id}</td>
+                        <td><strong>${node.name}</strong></td>
+                        <td>${node.category || '-'}</td>
+                        <td><span class="tag tag-${node.node_type}">${getTypeName(node.node_type)}</span></td>
+                        <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${node.description || '-'}</td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-sm" onclick="editNode(${node.id})">编辑</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteNode(${node.id})">删除</button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error('加载节点失败:', e);
+            }
+        }
+        
+        // 加载字段
+        async function loadFields() {
+            try {
+                const res = await fetch(`${API_BASE}/fields`);
+                const data = await res.json();
+                
+                const tbody = document.getElementById('fieldsTable');
+                if (!data.success || data.data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;">暂无数据</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = data.data.map(field => `
+                    <tr>
+                        <td><code>${field.name}</code></td>
+                        <td>${field.label}</td>
+                        <td>${field.field_type}</td>
+                        <td>${field.required ? '✓' : '-'}</td>
+                        <td>${field.visible ? '✓' : '-'}</td>
+                        <td>${field.editable ? '✓' : '-'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-danger" onclick="deleteField(${field.id})" 
+                                ${['name','category','node_type','description','meta','upstream','downstream'].includes(field.name) ? 'disabled' : ''}>
+                                删除
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error('加载字段失败:', e);
+            }
+        }
+        
+        // 搜索节点
+        function searchNodes() {
+            const keyword = document.getElementById('searchInput').value;
+            loadNodes(keyword);
+        }
+        
+        // 节点模态框
+        function openNodeModal(id = null) {
+            document.getElementById('nodeModal').classList.remove('hidden');
+            document.getElementById('nodeModalTitle').textContent = id ? '编辑节点' : '添加节点';
+            
+            if (id) {
+                loadNode(id);
+            } else {
+                document.getElementById('nodeForm').reset();
+                document.getElementById('nodeId').value = '';
+            }
+        }
+        
+        function closeNodeModal() {
+            document.getElementById('nodeModal').classList.add('hidden');
+        }
+        
+        async function loadNode(id) {
+            try {
+                const res = await fetch(`${API_BASE}/nodes/${id}`);
+                const data = await res.json();
+                if (data.success) {
+                    const node = data.data;
+                    document.getElementById('nodeId').value = node.id;
+                    document.getElementById('nodeName').value = node.name;
+                    document.getElementById('nodeCategory').value = node.category || '';
+                    document.getElementById('nodeType').value = node.node_type || 'product';
+                    document.getElementById('nodeDescription').value = node.description || '';
+                    document.getElementById('nodeUpstream').value = (node.upstream || []).join(', ');
+                    document.getElementById('nodeDownstream').value = (node.downstream || []).join(', ');
+                    document.getElementById('nodeMeta').value = (node.meta || []).join(', ');
+                }
+            } catch (e) {
+                console.error('加载节点失败:', e);
+            }
+        }
+        
+        async function editNode(id) {
+            openNodeModal(id);
+        }
+        
+        async function saveNode() {
+            const id = document.getElementById('nodeId').value;
+            const name = document.getElementById('nodeName').value;
+            
+            if (!name) {
+                alert('名称不能为空');
+                return;
+            }
+            
+            const nodeData = {
+                name: name,
+                category: document.getElementById('nodeCategory').value,
+                node_type: document.getElementById('nodeType').value,
+                description: document.getElementById('nodeDescription').value,
+                upstream: document.getElementById('nodeUpstream').value.split(',').map(s => s.trim()).filter(s => s),
+                downstream: document.getElementById('nodeDownstream').value.split(',').map(s => s.trim()).filter(s => s),
+                meta: document.getElementById('nodeMeta').value.split(',').map(s => s.trim()).filter(s => s),
+            };
+            
+            try {
+                const url = id ? `${API_BASE}/nodes/${id}` : `${API_BASE}/nodes`;
+                const method = id ? 'PUT' : 'POST';
+                
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(nodeData)
+                });
+                
+                const data = await res.json();
+                if (data.success) {
+                    closeNodeModal();
+                    loadNodes();
+                    loadStats();
+                    showToast(id ? '更新成功' : '添加成功', 'success');
+                } else {
+                    showToast(data.error || '操作失败', 'error');
+                }
+            } catch (e) {
+                showToast('操作失败: ' + e.message, 'error');
+            }
+        }
+        
+        async function deleteNode(id) {
+            if (!confirm('确定要删除这个节点吗？')) return;
+            
+            try {
+                const res = await fetch(`${API_BASE}/nodes/${id}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.success) {
+                    loadNodes();
+                    loadStats();
+                    showToast('删除成功', 'success');
+                } else {
+                    showToast(data.error || '删除失败', 'error');
+                }
+            } catch (e) {
+                showToast('删除失败: ' + e.message, 'error');
+            }
+        }
+        
+        // 字段模态框
+        function openFieldModal() {
+            document.getElementById('fieldModal').classList.remove('hidden');
+            document.getElementById('fieldModalTitle').textContent = '添加字段';
+            document.getElementById('fieldForm').reset();
+            document.getElementById('fieldId').value = '';
+        }
+        
+        function closeFieldModal() {
+            document.getElementById('fieldModal').classList.add('hidden');
+        }
+        
+        async function saveField() {
+            const name = document.getElementById('fieldName').value;
+            const label = document.getElementById('fieldLabel').value;
+            
+            if (!name || !label) {
+                alert('字段名和标签不能为空');
+                return;
+            }
+            
+            const fieldData = {
+                name: name,
+                label: label,
+                field_type: document.getElementById('fieldType').value,
+                options: document.getElementById('fieldOptions').value.split(',').map(s => s.trim()).filter(s => s),
+                required: document.getElementById('fieldRequired').checked,
+            };
+            
+            try {
+                const res = await fetch(`${API_BASE}/fields`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(fieldData)
+                });
+                
+                const data = await res.json();
+                if (data.success) {
+                    closeFieldModal();
+                    loadFields();
+                    loadStats();
+                    showToast('添加成功', 'success');
+                } else {
+                    showToast(data.error || '操作失败', 'error');
+                }
+            } catch (e) {
+                showToast('操作失败: ' + e.message, 'error');
+            }
+        }
+        
+        async function deleteField(id) {
+            if (!confirm('确定要删除这个字段吗？这不会影响已存储的数据。')) return;
+            
+            try {
+                const res = await fetch(`${API_BASE}/fields/${id}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.success) {
+                    loadFields();
+                    loadStats();
+                    showToast('删除成功', 'success');
+                } else {
+                    showToast(data.error || '删除失败', 'error');
+                }
+            } catch (e) {
+                showToast('删除失败: ' + e.message, 'error');
+            }
+        }
+        
+        // 工具函数
+        function getTypeName(type) {
+            const types = { industry: '行业', product: '产品', material: '材料', event: '事件' };
+            return types[type] || type;
+        }
+        
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+        
+        // 启动
+        init();
+    </script>
+</body>
+</html>
