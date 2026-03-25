@@ -607,6 +607,76 @@ def log_search(keyword, result_count, found):
     ''', (keyword, result_count, 1 if found else 0))
     db.commit()
 
+# -------------------- 通知功能 --------------------
+
+@app.route('/api/notify', methods=['POST'])
+def send_notification():
+    """发送通知（供前端调用）"""
+    data = request.get_json()
+    message = data.get('message', '')
+    
+    if not message:
+        return jsonify({'success': False, 'error': '消息内容不能为空'}), 400
+    
+    # 这里可以集成各种通知渠道
+    # 1. 写入通知文件供 OpenClaw 读取
+    notify_file = os.path.join(os.path.dirname(__file__), '.notifications.json')
+    notifications = []
+    if os.path.exists(notify_file):
+        with open(notify_file, 'r') as f:
+            notifications = json.load(f)
+    
+    notifications.append({
+        'message': message,
+        'time': datetime.now().isoformat(),
+        'read': False
+    })
+    
+    with open(notify_file, 'w') as f:
+        json.dump(notifications, f, ensure_ascii=False, indent=2)
+    
+    # 2. 尝试通过 HTTP 调用 OpenClaw 发送微信消息
+    try:
+        import requests
+        # 假设 OpenClaw Gateway 运行在 18789 端口
+        gateway_url = 'http://localhost:18789'
+        requests.post(f'{gateway_url}/api/notify', json={'message': message}, timeout=5)
+    except:
+        pass  # 如果 OpenClaw 未运行，忽略
+    
+    return jsonify({'success': True, 'message': '通知已发送'})
+
+@app.route('/api/notifications', methods=['GET'])
+def get_notifications():
+    """获取未读通知"""
+    notify_file = os.path.join(os.path.dirname(__file__), '.notifications.json')
+    if not os.path.exists(notify_file):
+        return jsonify({'success': True, 'data': []})
+    
+    with open(notify_file, 'r') as f:
+        notifications = json.load(f)
+    
+    unread = [n for n in notifications if not n.get('read', False)]
+    return jsonify({'success': True, 'data': unread, 'total': len(notifications)})
+
+@app.route('/api/notifications/mark-read', methods=['POST'])
+def mark_notifications_read():
+    """标记通知为已读"""
+    notify_file = os.path.join(os.path.dirname(__file__), '.notifications.json')
+    if not os.path.exists(notify_file):
+        return jsonify({'success': True})
+    
+    with open(notify_file, 'r') as f:
+        notifications = json.load(f)
+    
+    for n in notifications:
+        n['read'] = True
+    
+    with open(notify_file, 'w') as f:
+        json.dump(notifications, f, ensure_ascii=False, indent=2)
+    
+    return jsonify({'success': True})
+
 # ============================================================
 # 启动
 # ============================================================
@@ -617,6 +687,7 @@ if __name__ == '__main__':
     print("产业链知识图谱 API 服务")
     print("=" * 50)
     print("API 地址: http://localhost:5000")
-    print("管理接口: http://localhost:5000/admin")
+    print("前端页面: http://localhost:5000/static/index.html")
+    print("管理后台: http://localhost:5000/static/admin.html")
     print("=" * 50)
     app.run(host='0.0.0.0', port=5000, debug=True)
