@@ -694,14 +694,21 @@
             showLoading(true);
 
             try {
-                // 1. 优先查本地知识库
+                // 1. 优先查本地知识库（扩大搜索范围）
                 const localResult = buildGraphData(keyword, depth);
                 if (localResult.nodes.length > 1) {
                     showLoading(false);
                     return localResult;
                 }
 
-                // 2. 联网查询 WikiData
+                // 2. 如果本地没有，尝试模糊匹配
+                const fuzzyResult = fuzzySearchKnowledgeBase(keyword);
+                if (fuzzyResult.nodes.length > 1) {
+                    showLoading(false);
+                    return fuzzyResult;
+                }
+
+                // 3. 联网查询 WikiData
                 const searchResult = await searchWikidataREST(keyword);
                 if (!searchResult) {
                     showLoading(false);
@@ -1113,3 +1120,55 @@
     </script>
 </body>
 </html>
+        // 模糊搜索知识库（支持部分匹配）
+        function fuzzySearchKnowledgeBase(keyword) {
+            const nodes = [];
+            const links = [];
+            const keywordLower = keyword.toLowerCase();
+            
+            // 遍历所有知识库条目，查找相关的
+            for (const [name, node] of Object.entries(knowledgeBase)) {
+                // 检查关键词是否与节点名称相关
+                if (name.includes(keywordLower) || 
+                    (node.description && node.description.toLowerCase().includes(keywordLower))) {
+                    nodes.push({
+                        id: node.id,
+                        name: node.name,
+                        type: node.type,
+                        description: node.description,
+                        meta: node.meta,
+                        level: 2,
+                        direction: 'center',
+                        isCenter: name.includes(keywordLower)
+                    });
+                    
+                    // 添加上下游关系
+                    if (node.upstream) {
+                        node.upstream.forEach(up => {
+                            const upNode = knowledgeBase[up];
+                            if (upNode) {
+                                links.push({ source: upNode.id, target: node.id, type: 'depend' });
+                                if (!nodes.find(n => n.id === upNode.id)) {
+                                    nodes.push({ id: upNode.id, name: upNode.name, type: 'material', level: 1, direction: 'upstream' });
+                                }
+                            }
+                        });
+                    }
+                    if (node.downstream) {
+                        node.downstream.forEach(down => {
+                            const downNode = knowledgeBase[down];
+                            if (downNode) {
+                                links.push({ source: node.id, target: downNode.id, type: 'produce' });
+                                if (!nodes.find(n => n.id === downNode.id)) {
+                                    nodes.push({ id: downNode.id, name: downNode.name, type: 'product', level: 1, direction: 'downstream' });
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+            
+            return { nodes, links };
+        }
+
+
