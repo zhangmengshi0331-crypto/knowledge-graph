@@ -16,10 +16,15 @@ app.config['DATABASE'] = 'knowledge_graph.db'
 # 数据库初始化
 # ============================================================
 
+def get_db_path():
+    """获取数据库文件路径"""
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), app.config['DATABASE'])
+
 def init_db():
-    """初始化数据库"""
-    db = get_db()
-    
+    """初始化数据库（直接连接，不依赖请求上下文）"""
+    db = sqlite3.connect(get_db_path())
+    db.row_factory = sqlite3.Row
+
     # 创建节点表
     db.execute('''
         CREATE TABLE IF NOT EXISTS nodes (
@@ -35,7 +40,7 @@ def init_db():
             updated_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
     ''')
-    
+
     # 创建字段配置表（支持动态字段）
     db.execute('''
         CREATE TABLE IF NOT EXISTS fields (
@@ -51,7 +56,7 @@ def init_db():
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
     ''')
-    
+
     # 创建搜索日志表
     db.execute('''
         CREATE TABLE IF NOT EXISTS search_logs (
@@ -62,7 +67,7 @@ def init_db():
             searched_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
     ''')
-    
+
     # 初始化默认字段
     default_fields = [
         ('category', '行业分类', 'text', 1, 1, 1, None, 1),
@@ -73,7 +78,7 @@ def init_db():
         ('upstream', '上游', 'tags', 0, 1, 1, None, 6),
         ('downstream', '下游', 'tags', 0, 1, 1, None, 7),
     ]
-    
+
     cursor = db.execute("SELECT COUNT(*) FROM fields")
     if cursor.fetchone()[0] == 0:
         for field in default_fields:
@@ -81,29 +86,30 @@ def init_db():
                 INSERT INTO fields (name, label, field_type, required, visible, editable, options, sort_order)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ''', field)
-    
+
     db.commit()
-    
+
     # 导入默认数据
     import_default_data(db)
+    db.close()
 
 def import_default_data(db):
     """导入默认产业链数据"""
     cursor = db.execute("SELECT COUNT(*) FROM nodes")
     if cursor.fetchone()[0] > 0:
         return
-    
-    # 读取 JSON 数据
-    json_file = os.path.join(os.path.dirname(__file__), 'industry-data.json')
+
+    json_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'industry-data.json')
     if not os.path.exists(json_file):
+        print(f"[警告] 未找到 industry-data.json，跳过默认数据导入")
         return
-    
+
     with open(json_file, 'r', encoding='utf-8') as f:
         data = json.load(f)
-    
+
     for name, node in data.items():
         db.execute('''
-            INSERT INTO nodes (name, category, node_type, description, meta, upstream, downstream)
+            INSERT OR IGNORE INTO nodes (name, category, node_type, description, meta, upstream, downstream)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         ''', (
             node.get('name', name),
@@ -114,13 +120,14 @@ def import_default_data(db):
             json.dumps(node.get('upstream', []), ensure_ascii=False),
             json.dumps(node.get('downstream', []), ensure_ascii=False),
         ))
-    
+
     db.commit()
+    print(f"[初始化] 已导入 {len(data)} 条默认数据")
 
 def get_db():
-    """获取数据库连接"""
+    """获取请求级别的数据库连接（仅在请求上下文中使用）"""
     if 'db' not in g:
-        g.db = sqlite3.connect(app.config['DATABASE'])
+        g.db = sqlite3.connect(get_db_path())
         g.db.row_factory = sqlite3.Row
     return g.db
 
@@ -686,8 +693,7 @@ if __name__ == '__main__':
     print("=" * 50)
     print("产业链知识图谱 API 服务")
     print("=" * 50)
-    print("API 地址: http://localhost:5000")
-    print("前端页面: http://localhost:5000/static/index.html")
-    print("管理后台: http://localhost:5000/static/admin.html")
+    print("API 地址: http://localhost:5001")
+    print("管理后台: 请直接打开 admin.html")
     print("=" * 50)
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5001, debug=True)

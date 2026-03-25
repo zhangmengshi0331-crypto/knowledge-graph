@@ -436,28 +436,28 @@
             </div>
             
             <p style="margin-bottom: 16px; color: #64748b;">
-                以下 API 可供 Agent 调用，用于查询和修改数据库。Base URL: <code>http://localhost:5000/api</code>
+                以下 API 可供 Agent 调用，用于查询和修改数据库。Base URL: <code>http://localhost:5001/api</code>
             </p>
             
             <div class="api-endpoint">
                 <span class="api-method get">GET</span>
                 <span class="api-path">/api/nodes</span>
                 <p class="api-desc">获取所有节点，或通过 ?keyword=xxx 搜索</p>
-                <div class="api-code">curl http://localhost:5000/api/nodes?keyword=AI</div>
+                <div class="api-code">curl http://localhost:5001/api/nodes?keyword=AI</div>
             </div>
             
             <div class="api-endpoint">
                 <span class="api-method get">GET</span>
                 <span class="api-path">/api/nodes/:id</span>
                 <p class="api-desc">获取单个节点详情</p>
-                <div class="api-code">curl http://localhost:5000/api/nodes/1</div>
+                <div class="api-code">curl http://localhost:5001/api/nodes/1</div>
             </div>
             
             <div class="api-endpoint">
                 <span class="api-method post">POST</span>
                 <span class="api-path">/api/nodes</span>
                 <p class="api-desc">创建新节点</p>
-                <div class="api-code">curl -X POST http://localhost:5000/api/nodes \
+                <div class="api-code">curl -X POST http://localhost:5001/api/nodes \
   -H "Content-Type: application/json" \
   -d '{"name":"新节点","category":"新能源","node_type":"product","description":"描述..."}'</div>
             </div>
@@ -466,7 +466,7 @@
                 <span class="api-method put">PUT</span>
                 <span class="api-path">/api/nodes/:id</span>
                 <p class="api-desc">更新节点</p>
-                <div class="api-code">curl -X PUT http://localhost:5000/api/nodes/1 \
+                <div class="api-code">curl -X PUT http://localhost:5001/api/nodes/1 \
   -H "Content-Type: application/json" \
   -d '{"description":"更新后的描述","upstream":["原材料A"]}'</div>
             </div>
@@ -475,14 +475,14 @@
                 <span class="api-method delete">DELETE</span>
                 <span class="api-path">/api/nodes/:id</span>
                 <p class="api-desc">删除节点</p>
-                <div class="api-code">curl -X DELETE http://localhost:5000/api/nodes/1</div>
+                <div class="api-code">curl -X DELETE http://localhost:5001/api/nodes/1</div>
             </div>
             
             <div class="api-endpoint">
                 <span class="api-method get">GET</span>
                 <span class="api-path">/api/graph?keyword=xxx</span>
                 <p class="api-desc">获取图谱数据（上下各5层）</p>
-                <div class="api-code">curl http://localhost:5000/api/graph?keyword=锂电池</div>
+                <div class="api-code">curl http://localhost:5001/api/graph?keyword=锂电池</div>
             </div>
             
             <div class="api-endpoint">
@@ -495,7 +495,7 @@
                 <span class="api-method post">POST</span>
                 <span class="api-path">/api/fields</span>
                 <p class="api-desc">添加新字段</p>
-                <div class="api-code">curl -X POST http://localhost:5000/api/fields \
+                <div class="api-code">curl -X POST http://localhost:5001/api/fields \
   -H "Content-Type: application/json" \
   -d '{"name":"region","label":"地区","field_type":"text"}'</div>
             </div>
@@ -621,7 +621,7 @@
     </div>
 
     <script>
-        const API_BASE = 'http://localhost:5000/api';
+        const API_BASE = 'http://localhost:5001/api';
         
         // 初始化
         async function init() {
