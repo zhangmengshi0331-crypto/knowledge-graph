@@ -596,35 +596,496 @@
 
         // 内置产业链知识库（兜底数据，覆盖常见行业）
         const knowledgeBase = {
-            '新能源汽车': { id: 'ev', name: '新能源汽车', type: 'industry', description: '采用非常规车用燃料作为动力来源的汽车，包括纯电动、混合动力等。', meta: ['市场规模: 万亿级', '增长率: 30%+', '政策支持: 强'], upstream: ['锂电池', '芯片', '电机', '车身材料'], downstream: ['充电桩', '二手车市场', '汽车保险', '共享出行'] },
-            '锂电池': { id: 'battery', name: '锂电池', type: 'product', description: '新能源汽车核心零部件，由正极、负极、电解液和隔膜组成。', meta: ['成本占比: 40%', '技术壁垒: 高', '市场规模: 千亿级'], upstream: ['锂矿', '钴矿', '隔膜', '电解液'], downstream: ['新能源汽车', '储能系统', '消费电子'] },
-            '芯片': { id: 'chip', name: '芯片', type: 'product', description: '汽车电子系统核心，包括MCU、功率半导体、传感器等。', meta: ['单车用量: 1000+', '国产化率: 15%', '进口依赖: 高'], upstream: ['硅片', '光刻机', 'EDA软件', '特种气体'], downstream: ['新能源汽车', '智能手机', '服务器', '物联网'] },
-            '电机': { id: 'motor', name: '电机', type: 'product', description: '新能源汽车动力来源，将电能转换为机械能。', meta: ['效率: 95%+', '功率密度: 高', '成本占比: 10%'], upstream: ['永磁材料', '硅钢片', '铜线', '轴承'], downstream: ['新能源汽车', '工业机器人', '家电'] },
-            '车身材料': { id: 'material', name: '车身材料', type: 'material', description: '包括铝合金、高强度钢、碳纤维等轻量化材料。', meta: ['轻量化需求: 强', '成本敏感: 中'], upstream: ['铝土矿', '铁矿石', '碳纤维原丝'], downstream: ['新能源汽车', '航空航天', '轨道交通'] },
-            '充电桩': { id: 'charger', name: '充电桩', type: 'product', description: '为电动汽车提供充电服务的设备。', meta: ['覆盖率: 持续提升', '功率: 60-480kW'], upstream: ['充电模块', '配电设备', '电缆'], downstream: ['充电服务', '电网调度', '商业地产'] },
-            '光伏': { id: 'solar', name: '光伏', type: 'industry', description: '利用半导体材料光电效应将光能转换为电能的技术产业。', meta: ['装机量: 持续增长', '成本下降: 显著'], upstream: ['硅料', '光伏玻璃', '银浆', '逆变器'], downstream: ['光伏电站', '分布式发电', '储能系统'] },
-            '硅料': { id: 'silicon_material', name: '硅料', type: 'material', description: '光伏电池的核心原材料，多晶硅纯度要求极高。', meta: ['纯度: 99.9999%', '能耗: 高'], upstream: ['石英砂', '电力', '氯气'], downstream: ['光伏', '半导体', '硅片'] },
-            '逆变器': { id: 'inverter', name: '逆变器', type: 'product', description: '将直流电转换为交流电的核心设备。', meta: ['技术壁垒: 中高', '国产化: 高'], upstream: ['IGBT', '电容', '磁性元件'], downstream: ['光伏', '储能系统', '风电'] },
-            '人工智能': { id: 'ai', name: '人工智能', type: 'industry', description: '模拟人类智能的技术体系，包括机器学习、深度学习、自然语言处理等。', meta: ['市场规模: 万亿级', '增速: 40%+'], upstream: ['GPU芯片', '数据中心', '训练数据', '算法框架'], downstream: ['智能客服', '自动驾驶', '医疗AI', '金融科技'] },
-            'GPU芯片': { id: 'gpu', name: 'GPU芯片', type: 'product', description: '图形处理器，AI训练和推理的核心硬件。', meta: ['市场主导: 英伟达', '需求爆发'], upstream: ['晶圆代工', '封装测试', 'HBM存储'], downstream: ['人工智能', '游戏', '数据中心', '自动驾驶'] },
-            '数据中心': { id: 'datacenter', name: '数据中心', type: 'product', description: '承载AI训练和推理的基础设施。', meta: ['能耗: 高', '建设周期: 长'], upstream: ['服务器', '网络设备', '制冷系统', '电力'], downstream: ['人工智能', '云计算', '大数据'] },
-            '钢铁': { id: 'steel', name: '钢铁', type: 'industry', description: '以铁矿石为原料冶炼的金属材料，工业基础原材料。', meta: ['产量: 全球第一', '碳排放: 高'], upstream: ['铁矿石', '焦煤', '废钢', '石灰石'], downstream: ['建筑', '汽车', '机械', '家电', '造船'] },
-            '铁矿石': { id: 'iron_ore', name: '铁矿石', type: 'material', description: '钢铁生产的主要原料，全球主要产地为澳大利亚、巴西。', meta: ['进口依赖: 高', '价格波动: 大'], upstream: ['采矿设备', '运输'], downstream: ['钢铁', '生铁'] },
-            '焦煤': { id: 'coking_coal', name: '焦煤', type: 'material', description: '炼焦用煤，是钢铁冶炼的重要燃料和还原剂。', meta: ['资源稀缺', '战略价值: 高'], upstream: ['煤矿开采', '洗选'], downstream: ['钢铁', '焦炭'] },
-            '石油': { id: 'oil', name: '石油', type: 'industry', description: '重要的化石能源和化工原料，被称为"工业血液"。', meta: ['战略资源', '价格影响全球'], upstream: ['油田开采', '钻井设备', '管道运输'], downstream: ['汽油', '柴油', '化工原料', '塑料', '化肥'] },
-            '化工原料': { id: 'chem_material', name: '化工原料', type: 'material', description: '石油化工产品，是众多工业品的基础原料。', meta: ['品类繁多', '应用广泛'], upstream: ['石油', '天然气'], downstream: ['塑料', '橡胶', '化纤', '农药', '医药'] },
-            '云计算': { id: 'cloud', name: '云计算', type: 'industry', description: '通过互联网提供计算资源和服务的技术模式。', meta: ['市场规模: 万亿级', '增速: 25%+'], upstream: ['数据中心', '服务器', '网络带宽', '操作系统'], downstream: ['SaaS软件', '人工智能', '大数据', '物联网'] },
-            '服务器': { id: 'server', name: '服务器', type: 'product', description: '提供计算和存储服务的高性能计算机。', meta: ['需求持续增长', '国产化推进'], upstream: ['CPU', 'GPU芯片', '内存', '硬盘', '主板'], downstream: ['云计算', '数据中心', '企业IT'] },
-            '机器人': { id: 'robot', name: '机器人', type: 'industry', description: '能自动执行任务的机械装置，包括工业机器人和服务机器人。', meta: ['市场规模: 千亿级', '增速: 20%+'], upstream: ['伺服电机', '减速器', '控制器', '传感器'], downstream: ['汽车制造', '电子制造', '物流仓储', '医疗'] },
-            '减速器': { id: 'reducer', name: '减速器', type: 'product', description: '机器人核心零部件，传递扭矩并降低转速。', meta: ['技术壁垒: 高', '日本垄断: 强'], upstream: ['精密齿轮', '轴承', '特种钢'], downstream: ['机器人', '数控机床', '风电'] },
-            '伺服电机': { id: 'servo', name: '伺服电机', type: 'product', description: '机器人关节驱动核心，精确控制位置和速度。', meta: ['精度要求: 高', '国产化: 推进中'], upstream: ['永磁材料', '编码器', '驱动器'], downstream: ['机器人', '数控机床', '自动化设备'] },
-            '风电': { id: 'wind', name: '风电', type: 'industry', description: '利用风能发电的清洁能源产业。', meta: ['装机量: 快速增长', '海上风电: 趋势'], upstream: ['风机叶片', '主轴承', '齿轮箱', '发电机'], downstream: ['电网', '储能系统', '绿电交易'] },
-            '医药': { id: 'pharma', name: '医药', type: 'industry', description: '研发、生产和销售药品的产业，包括化学药、生物药、中药。', meta: ['市场规模: 万亿级', '研发周期: 长'], upstream: ['化工原料', '生物原料', '医疗器械', '实验设备'], downstream: ['医院', '药店', '医保', '患者'] },
-            '半导体': { id: 'semiconductor', name: '半导体', type: 'industry', description: '电子信息产业的基础，包括芯片设计、制造、封测全产业链。', meta: ['战略地位: 极高', '国产化: 迫切'], upstream: ['硅片', '光刻机', '光刻胶', 'EDA软件', '特种气体'], downstream: ['芯片', '消费电子', '汽车电子', '工业控制'] },
-            '光刻机': { id: 'lithography', name: '光刻机', type: 'product', description: '芯片制造核心设备，ASML垄断高端市场。', meta: ['技术壁垒: 极高', '荷兰ASML垄断'], upstream: ['光学镜头', '激光器', '精密机械'], downstream: ['半导体', '芯片制造'] },
-            '储能系统': { id: 'storage', name: '储能系统', type: 'product', description: '将电能存储并在需要时释放的系统。', meta: ['政策支持: 强', '应用广泛'], upstream: ['锂电池', '逆变器', 'BMS'], downstream: ['电网调峰', '新能源配储', '工商业储能'] },
-            '锂矿': { id: 'lithium', name: '锂矿', type: 'material', description: '锂电池主要原材料，全球资源集中在南美和澳洲。', meta: ['资源集中度: 高', '价格波动: 大'], upstream: ['采矿设备', '勘探技术'], downstream: ['锂电池', '玻璃陶瓷'] },
-        };
+    "AI人工智能": {
+        "id": "ai",
+        "name": "AI人工智能",
+        "type": "industry",
+        "description": "人工智能产业链包括上游基础层（芯片、算力、数据）、中游技术层（大模型、算法框架）、下游应用层（智能客服、自动驾驶、医疗AI等）。",
+        "meta": [
+            "市场规模: 万亿级",
+            "增速: 40%+",
+            "战略地位: 极高"
+        ],
+        "upstream": [
+            "GPU芯片",
+            "数据中心",
+            "训练数据",
+            "算法框架"
+        ],
+        "downstream": [
+            "智能客服",
+            "自动驾驶",
+            "医疗AI",
+            "金融科技",
+            "内容生成"
+        ]
+    },
+    "GPU芯片": {
+        "id": "gpu",
+        "name": "GPU芯片",
+        "type": "product",
+        "description": "图形处理器，因其并行计算能力成为AI训练和推理的核心硬件。英伟达A100/H100垄断高端市场，国内寒武纪、华为昇腾等在推进国产化。",
+        "meta": [
+            "市场主导: 英伟达",
+            "需求爆发",
+            "国产替代进行中"
+        ],
+        "upstream": [
+            "晶圆代工",
+            "封装测试",
+            "HBM存储",
+            "光刻机"
+        ],
+        "downstream": [
+            "AI大模型",
+            "数据中心",
+            "自动驾驶",
+            "游戏"
+        ]
+    },
+    "数据中心": {
+        "id": "datacenter",
+        "name": "数据中心",
+        "type": "product",
+        "description": "承载AI训练和推理的基础设施，包括服务器、网络设备、制冷系统、电力供应等。",
+        "meta": [
+            "能耗: 高",
+            "建设周期: 长",
+            "投资规模: 大"
+        ],
+        "upstream": [
+            "服务器",
+            "网络设备",
+            "制冷系统",
+            "电力设备"
+        ],
+        "downstream": [
+            "AI大模型",
+            "云计算",
+            "大数据",
+            "互联网服务"
+        ]
+    },
+    "训练数据": {
+        "id": "training_data",
+        "name": "训练数据",
+        "type": "material",
+        "description": "AI模型训练所需的大规模标注数据集，包括文本、图像、音频等多模态数据。",
+        "meta": [
+            "数据量: 海量",
+            "标注成本: 高",
+            "隐私风险: 需关注"
+        ],
+        "upstream": [
+            "数据采集",
+            "数据标注",
+            "数据清洗"
+        ],
+        "downstream": [
+            "大模型训练",
+            "计算机视觉",
+            "自然语言处理"
+        ]
+    },
+    "算法框架": {
+        "id": "framework",
+        "name": "算法框架",
+        "type": "product",
+        "description": "深度学习框架和工具库，如PyTorch、TensorFlow等，为AI模型开发提供基础工具。",
+        "meta": [
+            "开源生态: 活跃",
+            "学习曲线: 陡峭",
+            "社区支持: 强"
+        ],
+        "upstream": [
+            "编程语言",
+            "计算库",
+            "开源社区"
+        ],
+        "downstream": [
+            "大模型开发",
+            "计算机视觉",
+            "自然语言处理",
+            "强化学习"
+        ]
+    },
+    "智能客服": {
+        "id": "ai_customer_service",
+        "name": "智能客服",
+        "type": "product",
+        "description": "基于NLP和对话AI的自动化客服系统，可处理常见问题、订单查询等。",
+        "meta": [
+            "成本降低: 60%+",
+            "用户满意度: 提升",
+            "应用广泛"
+        ],
+        "upstream": [
+            "大模型",
+            "NLP技术",
+            "知识库系统"
+        ],
+        "downstream": [
+            "电商平台",
+            "金融机构",
+            "运营商",
+            "航空公司"
+        ]
+    },
+    "自动驾驶": {
+        "id": "autonomous_driving",
+        "name": "自动驾驶",
+        "type": "product",
+        "description": "利用AI感知、决策、控制技术实现车辆自动驾驶，包括L1-L5多个等级。",
+        "meta": [
+            "技术难度: 极高",
+            "安全要求: 严格",
+            "市场前景: 广阔"
+        ],
+        "upstream": [
+            "GPU芯片",
+            "传感器",
+            "大模型",
+            "高精地图"
+        ],
+        "downstream": [
+            "乘用车",
+            "商用车",
+            "出行服务",
+            "物流配送"
+        ]
+    },
+    "医疗AI": {
+        "id": "medical_ai",
+        "name": "医疗AI",
+        "type": "product",
+        "description": "应用于医学影像诊断、药物研发、病历分析等医疗领域的AI技术。",
+        "meta": [
+            "准确率: 95%+",
+            "监管要求: 严格",
+            "市场规模: 百亿级"
+        ],
+        "upstream": [
+            "大模型",
+            "医学数据",
+            "计算机视觉"
+        ],
+        "downstream": [
+            "医院",
+            "诊断中心",
+            "制药企业",
+            "保险公司"
+        ]
+    },
+    "科技产业": {
+        "id": "tech_industry",
+        "name": "科技产业",
+        "type": "industry",
+        "description": "包括半导体、软件、互联网、通信等高科技产业，是国家战略性产业。",
+        "meta": [
+            "市场规模: 万亿级",
+            "增速: 15%+",
+            "国产化: 推进中"
+        ],
+        "upstream": [
+            "基础研究",
+            "人才培养",
+            "资本投入"
+        ],
+        "downstream": [
+            "消费电子",
+            "工业控制",
+            "云计算",
+            "物联网"
+        ]
+    },
+    "半导体": {
+        "id": "semiconductor",
+        "name": "半导体",
+        "type": "industry",
+        "description": "电子信息产业的基础，包括芯片设计、制造、封测全产业链。",
+        "meta": [
+            "战略地位: 极高",
+            "国产化: 迫切",
+            "技术壁垒: 高"
+        ],
+        "upstream": [
+            "硅片",
+            "光刻机",
+            "光刻胶",
+            "EDA软件",
+            "特种气体"
+        ],
+        "downstream": [
+            "芯片",
+            "消费电子",
+            "汽车电子",
+            "工业控制"
+        ]
+    },
+    "光刻机": {
+        "id": "lithography",
+        "name": "光刻机",
+        "type": "product",
+        "description": "芯片制造核心设备，ASML垄断高端市场，技术壁垒极高。",
+        "meta": [
+            "技术壁垒: 极高",
+            "荷兰ASML垄断",
+            "国产化: 困难"
+        ],
+        "upstream": [
+            "光学镜头",
+            "激光器",
+            "精密机械",
+            "控制系统"
+        ],
+        "downstream": [
+            "半导体制造",
+            "芯片生产"
+        ]
+    },
+    "能源产业": {
+        "id": "energy",
+        "name": "能源产业",
+        "type": "industry",
+        "description": "包括传统能源（石油、煤炭、天然气）和新能源（光伏、风电、水电、核电）。",
+        "meta": [
+            "市场规模: 万亿级",
+            "转型: 绿色低碳",
+            "政策支持: 强"
+        ],
+        "upstream": [
+            "资源勘探",
+            "开采设备",
+            "运输基础设施"
+        ],
+        "downstream": [
+            "电力系统",
+            "工业用能",
+            "交通运输",
+            "生活用能"
+        ]
+    },
+    "光伏": {
+        "id": "solar",
+        "name": "光伏",
+        "type": "product",
+        "description": "利用半导体材料的光电效应直接将光能转换为电能的技术产业。",
+        "meta": [
+            "装机量: 快速增长",
+            "成本下降: 显著",
+            "清洁能源"
+        ],
+        "upstream": [
+            "硅料",
+            "光伏玻璃",
+            "银浆",
+            "逆变器"
+        ],
+        "downstream": [
+            "光伏电站",
+            "分布式发电",
+            "储能系统"
+        ]
+    },
+    "风电": {
+        "id": "wind",
+        "name": "风电",
+        "type": "product",
+        "description": "利用风能发电的清洁能源产业，包括陆上风电和海上风电。",
+        "meta": [
+            "装机量: 快速增长",
+            "海上风电: 趋势",
+            "成本竞争力: 提升"
+        ],
+        "upstream": [
+            "风机叶片",
+            "主轴承",
+            "齿轮箱",
+            "发电机"
+        ],
+        "downstream": [
+            "电网",
+            "储能系统",
+            "绿电交易"
+        ]
+    },
+    "储能系统": {
+        "id": "energy_storage",
+        "name": "储能系统",
+        "type": "product",
+        "description": "将电能存储并在需要时释放的系统，包括电化学储能、机械储能等。",
+        "meta": [
+            "政策支持: 强",
+            "应用广泛",
+            "成本下降: 快"
+        ],
+        "upstream": [
+            "锂电池",
+            "逆变器",
+            "BMS",
+            "储能柜"
+        ],
+        "downstream": [
+            "电网调峰",
+            "新能源配储",
+            "工商业储能",
+            "家庭储能"
+        ]
+    },
+    "农业产业": {
+        "id": "agriculture",
+        "name": "农业产业",
+        "type": "industry",
+        "description": "包括种植业、养殖业、农产品加工等，是国民经济基础产业。",
+        "meta": [
+            "市场规模: 万亿级",
+            "现代化: 推进中",
+            "科技赋能: 加速"
+        ],
+        "upstream": [
+            "种子",
+            "化肥",
+            "农药",
+            "农机",
+            "饲料"
+        ],
+        "downstream": [
+            "农产品加工",
+            "食品工业",
+            "餐饮",
+            "零售"
+        ]
+    },
+    "种子": {
+        "id": "seed",
+        "name": "种子",
+        "type": "material",
+        "description": "农业生产的基础，包括粮食种子、蔬菜种子、水果种子等。",
+        "meta": [
+            "自给率: 需提升",
+            "育种技术: 关键",
+            "国产化: 重要"
+        ],
+        "upstream": [
+            "育种研究",
+            "生物技术",
+            "田间试验"
+        ],
+        "downstream": [
+            "种植业",
+            "农业生产"
+        ]
+    },
+    "化肥": {
+        "id": "fertilizer",
+        "name": "化肥",
+        "type": "material",
+        "description": "为农作物提供营养的化学肥料，包括氮肥、磷肥、钾肥等。",
+        "meta": [
+            "需求量: 大",
+            "价格波动: 大",
+            "环保压力: 增加"
+        ],
+        "upstream": [
+            "原油",
+            "天然气",
+            "磷矿",
+            "钾矿"
+        ],
+        "downstream": [
+            "种植业",
+            "农业生产",
+            "环境"
+        ]
+    },
+    "农药": {
+        "id": "pesticide",
+        "name": "农药",
+        "type": "material",
+        "description": "用于防治农作物病虫害的化学物质，包括杀虫剂、杀菌剂、除草剂等。",
+        "meta": [
+            "需求量: 大",
+            "环保要求: 严格",
+            "创新: 生物农药"
+        ],
+        "upstream": [
+            "化工原料",
+            "生物技术",
+            "研发"
+        ],
+        "downstream": [
+            "种植业",
+            "农业生产",
+            "环境"
+        ]
+    },
+    "农机": {
+        "id": "agricultural_machinery",
+        "name": "农机",
+        "type": "product",
+        "description": "用于农业生产的机械设备，包括拖拉机、收割机、播种机等。",
+        "meta": [
+            "智能化: 趋势",
+            "国产化: 提升",
+            "需求: 稳定"
+        ],
+        "upstream": [
+            "发动机",
+            "液压系统",
+            "电子控制",
+            "钢铁"
+        ],
+        "downstream": [
+            "种植业",
+            "农业生产",
+            "农业服务"
+        ]
+    },
+    "饲料": {
+        "id": "feed",
+        "name": "饲料",
+        "type": "material",
+        "description": "为畜禽提供营养的饲料产品，包括配合饲料、浓缩饲料等。",
+        "meta": [
+            "需求量: 大",
+            "成本占比: 高",
+            "营养: 关键"
+        ],
+        "upstream": [
+            "粮食",
+            "豆粕",
+            "鱼粉",
+            "添加剂"
+        ],
+        "downstream": [
+            "养殖业",
+            "畜禽生产"
+        ]
+    },
+    "农产品加工": {
+        "id": "agricultural_processing",
+        "name": "农产品加工",
+        "type": "product",
+        "description": "将农产品转化为食品、饮料、纺织品等产品的产业。",
+        "meta": [
+            "附加值: 提升",
+            "食品安全: 关键",
+            "市场规模: 大"
+        ],
+        "upstream": [
+            "农产品",
+            "包装材料",
+            "添加剂",
+            "能源"
+        ],
+        "downstream": [
+            "食品工业",
+            "餐饮",
+            "零售",
+            "出口"
+        ]
+    }
+};
 
         // WikiData REST API 搜索（支持 CORS）
         async function searchWikidataREST(keyword) {
@@ -701,57 +1162,7 @@
                     return localResult;
                 }
 
-                // 2. 如果本地没有，尝试模糊匹配
-                const fuzzyResult = fuzzySearchKnowledgeBase(keyword);
-                if (fuzzyResult.nodes.length > 1) {
-                    showLoading(false);
-                    return fuzzyResult;
-                }
-
-                // 3. 联网查询 WikiData
-                const searchResult = await searchWikidataREST(keyword);
-                if (!searchResult) {
-                    showLoading(false);
-                    return { nodes: [], links: [] };
-                }
-
-                const qid = searchResult.id;
-                const centerLabel = searchResult.label || keyword;
-                const centerDesc = searchResult.description || `${centerLabel} 的产业链结构`;
-
-                // 3. 获取实体详情
-                const entity = await fetchWikidataEntity(qid);
-
-                // 提取关联属性
-                // P186: 材料/原料（上游）
-                // P2283: 使用（上游）
-                // P1056: 产出（下游）
-                // P279: 上位类（上游）
-                // P31: 类型
-                const upstreamQids = [
-                    ...extractClaims(entity, 'P186'),
-                    ...extractClaims(entity, 'P2283'),
-                ].slice(0, 8);
-
-                const downstreamQids = [
-                    ...extractClaims(entity, 'P1056'),
-                ].slice(0, 8);
-
-                const relatedQids = [
-                    ...extractClaims(entity, 'P279'),
-                ].slice(0, 4);
-
-                const allQids = [...new Set([...upstreamQids, ...downstreamQids, ...relatedQids])];
-
-                if (allQids.length === 0) {
-                    showLoading(false);
-                    return { nodes: [], links: [] };
-                }
-
-                // 4. 批量获取标签
-                const labels = await fetchLabels(allQids);
-
-                // 5. 构建图谱
+                // 2. 尝试模糊匹配
                 const nodes = [];
                 const links = [];
                 const nodeMap = new Set();
