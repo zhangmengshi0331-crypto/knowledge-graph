@@ -1155,72 +1155,89 @@
             showLoading(true);
 
             try {
-                // 1. 优先查本地知识库（扩大搜索范围）
+                // 1. 优先查本地知识库（精确匹配）
                 const localResult = buildGraphData(keyword, depth);
                 if (localResult.nodes.length > 1) {
                     showLoading(false);
                     return localResult;
                 }
 
-                // 2. 尝试模糊匹配
-                const nodes = [];
-                const links = [];
-                const nodeMap = new Set();
+                // 2. 尝试模糊匹配（关键词包含或相似匹配）
+                const fuzzyResult = fuzzySearchKnowledgeBase(keyword);
+                if (fuzzyResult.nodes.length > 1) {
+                    showLoading(false);
+                    return fuzzyResult;
+                }
 
-                // 中心节点
-                nodes.push({
-                    id: qid,
-                    name: centerLabel,
-                    type: 'industry',
-                    description: centerDesc,
-                    meta: [`数据来源: WikiData`, `实体ID: ${qid}`],
-                    isCenter: true,
-                    level: depth,
-                    direction: 'center'
-                });
-                nodeMap.add(qid);
+                // 3. 尝试首字母匹配
+                const initialMatch = searchByInitial(keyword);
+                if (initialMatch.nodes.length > 1) {
+                    showLoading(false);
+                    return initialMatch;
+                }
 
-                const addNode = (id, direction, relLabel) => {
-                    const info = labels[id];
-                    if (!info) return;
-                    const lbl = info.label;
-                    // 过滤掉纯 QID 标签
-                    if (/^Q\d+$/.test(lbl)) return;
-                    if (nodeMap.has(id)) return;
-                    nodeMap.add(id);
-
-                    nodes.push({
-                        id,
-                        name: lbl,
-                        type: direction === 'upstream' ? 'material' : 'product',
-                        description: info.desc || `${lbl}（${relLabel}）`,
-                        meta: [`关系: ${relLabel}`, `数据来源: WikiData`],
-                        level: 1,
-                        direction
-                    });
-
-                    links.push({
-                        source: direction === 'upstream' ? id : qid,
-                        target: direction === 'upstream' ? qid : id,
-                        type: relLabel,
-                        label: relLabel
-                    });
-                };
-
-                upstreamQids.forEach(id => addNode(id, 'upstream', '原材料/依赖'));
-                downstreamQids.forEach(id => addNode(id, 'downstream', '产出/应用'));
-                relatedQids.forEach(id => addNode(id, 'upstream', '上位类'));
-
+                // 4. 都没找到，返回空结果但不报错
                 showLoading(false);
-
-                if (nodes.length <= 1) return { nodes: [], links: [] };
-                return { nodes, links };
+                return { nodes: [], links: [] };
 
             } catch (error) {
                 console.error('查询失败:', error);
                 showLoading(false);
+                // 回退到本地数据
                 return buildGraphData(keyword, depth);
             }
+        }
+
+        // 首字母匹配搜索
+        function searchByInitial(keyword) {
+            const nodes = [];
+            const links = [];
+            const visited = new Set();
+            const keywordLower = keyword.toLowerCase();
+            
+            // 检查关键词首字母
+            for (const [name, node] of Object.entries(knowledgeBase)) {
+                if (name.charAt(0).toLowerCase() === keywordLower.charAt(0)) {
+                    if (visited.has(name)) continue;
+                    visited.add(name);
+                    
+                    nodes.push({
+                        id: node.id,
+                        name: node.name,
+                        type: node.type,
+                        description: node.description,
+                        meta: node.meta,
+                        level: 2,
+                        direction: 'center',
+                        isCenter: true
+                    });
+                    
+                    // 添加关联
+                    if (node.upstream) {
+                        node.upstream.forEach(up => {
+                            const upNode = knowledgeBase[up];
+                            if (upNode) {
+                                links.push({ source: upNode.id, target: node.id, type: 'depend' });
+                                if (!nodes.find(n => n.id === upNode.id)) {
+                                    nodes.push({ id: upNode.id, name: upNode.name, type: 'material', level: 1, direction: 'upstream' });
+                                }
+                            }
+                        });
+                    }
+                    if (node.downstream) {
+                        node.downstream.forEach(down => {
+                            const downNode = knowledgeBase[down];
+                            if (downNode) {
+                                links.push({ source: node.id, target: downNode.id, type: 'produce' });
+                                if (!nodes.find(n => n.id === downNode.id)) {
+                                    nodes.push({ id: downNode.id, name: downNode.name, type: 'product', level: 1, direction: 'downstream' });
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+            return { nodes, links };
         }
 
 
