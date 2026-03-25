@@ -1,0 +1,532 @@
+{
+  "AI人工智能": {
+    "id": "ai",
+    "name": "AI人工智能",
+    "type": "industry",
+    "category": "AI人工智能",
+    "description": "人工智能产业链包括上游基础层（芯片、算力、数据）、中游技术层（大模型、算法框架）、下游应用层（智能客服、自动驾驶、医疗AI等）。",
+    "meta": ["市场规模: 万亿级", "增速: 40%+", "战略地位: 极高"],
+    "upstream": ["GPU芯片", "数据中心", "训练数据", "算法框架"],
+    "downstream": ["智能客服", "自动驾驶", "医疗AI", "金融科技", "内容生成"]
+  },
+  "GPU芯片": {
+    "id": "gpu",
+    "name": "GPU芯片",
+    "type": "product",
+    "category": "AI人工智能",
+    "description": "AI训练和推理核心硬件，英伟达A100/H100垄断高端市场，国内寒武纪、华为昇腾等在推进国产化。",
+    "meta": ["市场主导: 英伟达", "需求爆发", "国产替代进行中"],
+    "upstream": ["晶圆代工", "封装测试", "HBM存储", "光刻机"],
+    "downstream": ["AI大模型", "数据中心", "自动驾驶", "游戏"]
+  },
+  "数据中心": {
+    "id": "datacenter",
+    "name": "数据中心",
+    "type": "product",
+    "category": "AI人工智能",
+    "description": "承载AI训练和推理的基础设施，包括服务器、网络设备、制冷系统、电力供应等。",
+    "meta": ["能耗: 高", "建设周期: 长", "投资规模: 大"],
+    "upstream": ["服务器", "网络设备", "制冷系统", "电力设备"],
+    "downstream": ["AI大模型", "云计算", "大数据", "互联网服务"]
+  },
+  "训练数据": {
+    "id": "training_data",
+    "name": "训练数据",
+    "type": "material",
+    "category": "AI人工智能",
+    "description": "AI模型训练所需的大规模标注数据集，包括文本、图像、音频等多模态数据。",
+    "meta": ["数据量: 海量", "标注成本: 高", "隐私风险: 需关注"],
+    "upstream": ["数据采集", "数据标注", "数据清洗"],
+    "downstream": ["大模型训练", "计算机视觉", "自然语言处理"]
+  },
+  "算法框架": {
+    "id": "framework",
+    "name": "算法框架",
+    "type": "product",
+    "category": "AI人工智能",
+    "description": "PyTorch、TensorFlow等深度学习框架，为AI模型开发提供基础工具。",
+    "meta": ["开源生态: 活跃", "学习曲线: 陡峭", "社区支持: 强"],
+    "upstream": ["编程语言", "计算库", "开源社区"],
+    "downstream": ["大模型开发", "计算机视觉", "自然语言处理", "强化学习"]
+  },
+  "智能客服": {
+    "id": "ai_customer_service",
+    "name": "智能客服",
+    "type": "product",
+    "category": "AI人工智能",
+    "description": "基于NLP和对话AI的自动化客服系统，可处理常见问题、订单查询等。",
+    "meta": ["成本降低: 60%+", "用户满意度: 提升", "应用广泛"],
+    "upstream": ["大模型", "NLP技术", "知识库系统"],
+    "downstream": ["电商平台", "金融机构", "运营商", "航空公司"]
+  },
+  "自动驾驶": {
+    "id": "autonomous_driving",
+    "name": "自动驾驶",
+    "type": "product",
+    "category": "AI人工智能",
+    "description": "L1-L5级自动驾驶技术，利用AI感知、决策、控制实现车辆自动驾驶。",
+    "meta": ["技术难度: 极高", "安全要求: 严格", "市场前景: 广阔"],
+    "upstream": ["GPU芯片", "传感器", "大模型", "高精地图"],
+    "downstream": ["乘用车", "商用车", "出行服务", "物流配送"]
+  },
+  "医疗AI": {
+    "id": "medical_ai",
+    "name": "医疗AI",
+    "type": "product",
+    "category": "AI人工智能",
+    "description": "医学影像诊断、药物研发、病历分析等AI技术。",
+    "meta": ["准确率: 95%+", "监管要求: 严格", "市场规模: 百亿级"],
+    "upstream": ["大模型", "医学数据", "计算机视觉"],
+    "downstream": ["医院", "诊断中心", "制药企业", "保险公司"]
+  },
+  "大模型": {
+    "id": "llm",
+    "name": "AI大模型",
+    "type": "product",
+    "category": "AI人工智能",
+    "description": "大规模语言模型和多模态模型，如GPT、Claude、Llama等。",
+    "meta": ["参数量: 千亿级", "训练成本: 高", "涌现能力"],
+    "upstream": ["GPU芯片", "训练数据", "算法框架", "算力资源"],
+    "downstream": ["智能客服", "内容生成", "代码助手", "数据分析"]
+  },
+  "云计算": {
+    "id": "cloud_computing",
+    "name": "云计算",
+    "type": "product",
+    "category": "AI人工智能",
+    "description": "按需分配计算资源的云服务模式，包括IaaS、PaaS、SaaS三层。",
+    "meta": ["市场: 千亿级", "增速: 20%+", "头部集中"],
+    "upstream": ["数据中心", "服务器", "网络设备"],
+    "downstream": ["企业服务", "SaaS应用", "AI服务", "流媒体"]
+  },
+  "新能源汽车": {
+    "id": "nev",
+    "name": "新能源汽车",
+    "type": "industry",
+    "category": "新能源汽车",
+    "description": "以电力驱动为主的新型汽车，包括纯电动、插电混动、燃料电池等多种类型。",
+    "meta": ["渗透率: 快速提升", "政策支持: 强", "市场前景: 广阔"],
+    "upstream": ["锂电池", "驱动电机", "电控系统", "汽车芯片", "充电桩"],
+    "downstream": ["整车制造", "出行服务", "充电服务", "电池回收"]
+  },
+  "锂电池": {
+    "id": "battery",
+    "name": "锂电池",
+    "type": "product",
+    "category": "新能源汽车",
+    "description": "新能源汽车核心储能部件，包括三元锂、磷酸铁锂等多种技术路线。",
+    "meta": ["能量密度: 持续提升", "成本下降", "回收体系建立中"],
+    "upstream": ["锂矿", "正极材料", "负极材料", "电解液", "隔膜"],
+    "downstream": ["新能源汽车", "储能系统", "消费电子", "电动工具"]
+  },
+  "锂矿": {
+    "id": "lithium",
+    "name": "锂矿",
+    "type": "material",
+    "category": "新能源汽车",
+    "description": "锂电池核心原材料，包括锂辉石、盐湖卤水等来源。",
+    "meta": ["供应: 集中度高", "价格波动大", "战略资源"],
+    "upstream": ["锂矿开采", "盐湖提锂"],
+    "downstream": ["锂电池", "正极材料"]
+  },
+  "正极材料": {
+    "id": "cathode",
+    "name": "正极材料",
+    "type": "material",
+    "category": "新能源汽车",
+    "description": "锂电池关键材料，包括三元材料、磷酸铁锂等。",
+    "meta": ["成本占比: 40%+", "技术路线分化", "竞争激烈"],
+    "upstream": ["锂矿", "钴矿", "镍矿"],
+    "downstream": ["锂电池", "新能源汽车"]
+  },
+  "负极材料": {
+    "id": "anode",
+    "name": "负极材料",
+    "type": "material",
+    "category": "新能源汽车",
+    "description": "锂电池负极材料，主要是石墨，包括人造石墨和天然石墨。",
+    "meta": ["成本占比: 15%", "技术成熟", "中国企业主导"],
+    "upstream": ["石油焦", "针状焦", "天然石墨"],
+    "downstream": ["锂电池", "储能系统"]
+  },
+  "电解液": {
+    "id": "electrolyte",
+    "name": "电解液",
+    "type": "material",
+    "category": "新能源汽车",
+    "description": "锂电池内部离子传输介质，六氟磷酸锂是核心溶质。",
+    "meta": ["成本占比: 10%", "配方差异大", "产能扩张快"],
+    "upstream": ["六氟磷酸锂", "溶剂", "添加剂"],
+    "downstream": ["锂电池", "储能系统"]
+  },
+  "隔膜": {
+    "id": "separator",
+    "name": "隔膜",
+    "type": "material",
+    "category": "新能源汽车",
+    "description": "锂电池内部隔离正负极的薄膜材料。",
+    "meta": ["技术壁垒: 高", "毛利率: 较高", "国产化完成"],
+    "upstream": ["聚乙烯", "聚丙烯", "涂覆材料"],
+    "downstream": ["锂电池", "储能系统"]
+  },
+  "驱动电机": {
+    "id": "motor",
+    "name": "驱动电机",
+    "type": "product",
+    "category": "新能源汽车",
+    "description": "新能源汽车核心动力部件，将电能转化为机械能。",
+    "meta": ["效率: 高", "功率密度提升", "集成化趋势"],
+    "upstream": ["稀土永磁材料", "硅钢片", "铜线"],
+    "downstream": ["新能源汽车", "电动物流车"]
+  },
+  "电控系统": {
+    "id": "bms",
+    "name": "电控系统",
+    "type": "product",
+    "category": "新能源汽车",
+    "description": "电池管理系统和整车控制系统的统称。",
+    "meta": ["技术含量: 高", "安全要求: 严格", "智能化趋势"],
+    "upstream": ["汽车芯片", "功率半导体", "传感器"],
+    "downstream": ["新能源汽车", "充电桩"]
+  },
+  "汽车芯片": {
+    "id": "auto_chip",
+    "name": "汽车芯片",
+    "type": "product",
+    "category": "新能源汽车",
+    "description": "车载计算芯片、功率芯片、传感器芯片等。",
+    "meta": ["国产化: 加速", "算力需求增长", "安全等级要求高"],
+    "upstream": ["晶圆代工", "封装测试", "半导体材料"],
+    "downstream": ["新能源汽车", "智能驾驶", "车联网"]
+  },
+  "充电桩": {
+    "id": "charging_station",
+    "name": "充电桩",
+    "type": "product",
+    "category": "新能源汽车",
+    "description": "新能源汽车充能基础设施，包括快充和慢充类型。",
+    "meta": ["政策支持: 强", "覆盖率提升", "快充趋势"],
+    "upstream": ["功率半导体", "充电模块", "运营系统"],
+    "downstream": ["新能源汽车", "物业", "商业运营"]
+  },
+  "稀土永磁材料": {
+    "id": "rare_earth",
+    "name": "稀土永磁材料",
+    "type": "material",
+    "category": "新能源汽车",
+    "description": "钕铁硼等高性能永磁材料，用于驱动电机。",
+    "meta": ["中国主导", "战略资源", "出口管制"],
+    "upstream": ["稀土矿", "稀土冶炼"],
+    "downstream": ["驱动电机", "风力发电机", "消费电子"]
+  },
+  "半导体": {
+    "id": "semiconductor",
+    "name": "半导体",
+    "type": "industry",
+    "category": "半导体",
+    "description": "电子信息产业的基础，包括芯片设计、制造、封测全产业链。",
+    "meta": ["战略地位: 极高", "国产化: 迫切", "技术壁垒: 高"],
+    "upstream": ["硅片", "光刻机", "光刻胶", "EDA软件", "特种气体"],
+    "downstream": ["芯片", "消费电子", "汽车电子", "工业控制"]
+  },
+  "芯片": {
+    "id": "chip",
+    "name": "芯片",
+    "type": "product",
+    "category": "半导体",
+    "description": "集成电路芯片，包括CPU、GPU、存储芯片、模拟芯片等。",
+    "meta": ["市场规模: 全球最大", "国产化率: 较低", "技术迭代快"],
+    "upstream": ["晶圆代工", "封装测试", "半导体材料"],
+    "downstream": ["消费电子", "汽车电子", "工业控制", "AI应用"]
+  },
+  "晶圆代工": {
+    "id": "foundry",
+    "name": "晶圆代工",
+    "type": "product",
+    "category": "半导体",
+    "description": "集成电路制造服务，台积电、三星、中芯国际等。",
+    "meta": ["市场集中度高", "制程工艺: 竞争核心", "资本密集"],
+    "upstream": ["硅片", "光刻机", "半导体材料", "设备零部件"],
+    "downstream": ["芯片", "封装测试"]
+  },
+  "硅片": {
+    "id": "silicon_wafer",
+    "name": "硅片",
+    "type": "material",
+    "category": "半导体",
+    "description": "半导体制造的基础材料，包括8寸和12寸等规格。",
+    "meta": ["市场: 稳健增长", "国产化: 推进中", "集中度高"],
+    "upstream": ["多晶硅", "单晶硅"],
+    "downstream": ["晶圆代工", "芯片制造"]
+  },
+  "光刻机": {
+    "id": "lithography",
+    "name": "光刻机",
+    "type": "product",
+    "category": "半导体",
+    "description": "芯片制造核心设备，ASML垄断EUV高端市场。",
+    "meta": ["技术壁垒: 极高", "荷兰ASML垄断", "国产化: 困难"],
+    "upstream": ["光学镜头", "激光器", "精密机械", "控制系统"],
+    "downstream": ["晶圆代工", "芯片制造"]
+  },
+  "光刻胶": {
+    "id": "photoresist",
+    "name": "光刻胶",
+    "type": "material",
+    "category": "半导体",
+    "description": "光刻工艺关键材料，用于图案转移。",
+    "meta": ["技术壁垒: 高", "日系主导", "国产化: 起步"],
+    "upstream": ["化工原料", "光引发剂", "树脂"],
+    "downstream": ["晶圆代工", "芯片制造"]
+  },
+  "EDA软件": {
+    "id": "eda",
+    "name": "EDA软件",
+    "type": "product",
+    "category": "半导体",
+    "description": "电子设计自动化软件，芯片设计必备工具。",
+    "meta": ["市场: 稳健", "三巨头垄断", "国产化: 加速"],
+    "upstream": ["算法", "半导体IP", "人才"],
+    "downstream": ["芯片设计", "半导体IP"]
+  },
+  "封装测试": {
+    "id": "packaging",
+    "name": "封装测试",
+    "type": "product",
+    "category": "半导体",
+    "description": "芯片封装和测试服务，先进封装技术日益重要。",
+    "meta": ["技术升级中", "国产化率高", "先进封装前景好"],
+    "upstream": ["封装材料", "测试设备"],
+    "downstream": ["芯片", "消费电子"]
+  },
+  "光伏": {
+    "id": "solar",
+    "name": "光伏",
+    "type": "industry",
+    "category": "新能源",
+    "description": "利用半导体材料的光电效应直接将光能转换为电能的技术产业。",
+    "meta": ["装机量: 快速增长", "成本下降: 显著", "清洁能源"],
+    "upstream": ["硅料", "光伏玻璃", "银浆", "逆变器", "EVA胶膜"],
+    "downstream": ["光伏电站", "分布式发电", "储能系统"]
+  },
+  "硅料": {
+    "id": "silicon_material",
+    "name": "硅料",
+    "type": "material",
+    "category": "新能源",
+    "description": "光伏产业链上游原材料，包括多晶硅和单晶硅料。",
+    "meta": ["价格波动大", "中国主导", "产能扩张快"],
+    "upstream": ["工业硅", "电力"],
+    "downstream": ["硅片", "光伏组件"]
+  },
+  "硅片": {
+    "id": "solar_wafer",
+    "name": "硅片",
+    "type": "product",
+    "category": "新能源",
+    "description": "光伏电池片的前道材料，分单晶硅片和多晶硅片。",
+    "meta": ["大尺寸化", "薄片化趋势", "竞争激烈"],
+    "upstream": ["硅料", "金刚线"],
+    "downstream": ["光伏电池", "光伏组件"]
+  },
+  "光伏组件": {
+    "id": "solar_panel",
+    "name": "光伏组件",
+    "type": "product",
+    "category": "新能源",
+    "description": "光伏发电系统的核心部件，由电池片串联封装而成。",
+    "meta": ["出口占比高", "技术成熟", "价格竞争激烈"],
+    "upstream": ["硅片", "光伏玻璃", "EVA胶膜", "边框"],
+    "downstream": ["光伏电站", "分布式发电"]
+  },
+  "逆变器": {
+    "id": "inverter",
+    "name": "逆变器",
+    "type": "product",
+    "category": "新能源",
+    "description": "将直流电转换为交流电的设备，用于光伏和储能系统。",
+    "meta": ["技术成熟", "国产化率高", "储能协同发展"],
+    "upstream": ["IGBT", "功率半导体", "磁性元件"],
+    "downstream": ["光伏电站", "储能系统", "充电桩"]
+  },
+  "光伏玻璃": {
+    "id": "solar_glass",
+    "name": "光伏玻璃",
+    "type": "material",
+    "category": "新能源",
+    "description": "用于光伏组件封装的玻璃，保护电池片并透光。",
+    "meta": ["双玻组件渗透率提升", "集中度高", "价格承压"],
+    "upstream": ["纯碱", "石英砂", "超白浮法玻璃"],
+    "downstream": ["光伏组件", "光伏电站"]
+  },
+  "EVA胶膜": {
+    "id": "eva_film",
+    "name": "EVA胶膜",
+    "type": "material",
+    "category": "新能源",
+    "description": "光伏组件封装材料，用于粘接电池片与玻璃、背板。",
+    "meta": ["技术门槛: 中", "毛利较高", "需求稳定"],
+    "upstream": ["EVA粒子", "助剂"],
+    "downstream": ["光伏组件"]
+  },
+  "储能系统": {
+    "id": "energy_storage",
+    "name": "储能系统",
+    "type": "product",
+    "category": "新能源",
+    "description": "将电能存储并在需要时释放的系统，包括电化学储能和机械储能等。",
+    "meta": ["政策支持: 强", "应用广泛", "成本下降: 快"],
+    "upstream": ["锂电池", "逆变器", "BMS", "储能柜"],
+    "downstream": ["电网调峰", "新能源配储", "工商业储能", "家庭储能"]
+  },
+  "风电": {
+    "id": "wind",
+    "name": "风电",
+    "type": "industry",
+    "category": "新能源",
+    "description": "利用风能发电的清洁能源产业，包括陆上风电和海上风电。",
+    "meta": ["装机量: 快速增长", "海上风电: 趋势", "成本竞争力: 提升"],
+    "upstream": ["风机叶片", "主轴承", "齿轮箱", "发电机", "塔筒"],
+    "downstream": ["电网", "储能系统", "绿电交易"]
+  },
+  "风机叶片": {
+    "id": "wind_blade",
+    "name": "风机叶片",
+    "type": "material",
+    "category": "新能源",
+    "description": "风力发电机的核心部件，决定发电效率。",
+    "meta": ["大型化趋势", "材料: 复合材料", "运输成本高"],
+    "upstream": ["碳纤维", "玻璃纤维", "环氧树脂"],
+    "downstream": ["风电整机", "风电场"]
+  },
+  "主轴承": {
+    "id": "main_bearing",
+    "name": "主轴承",
+    "type": "material",
+    "category": "新能源",
+    "description": "风机核心传动部件，技术壁垒高。",
+    "meta": ["技术壁垒: 高", "国产化: 加速", "价值量高"],
+    "upstream": ["特钢", "精密加工"],
+    "downstream": ["风电整机", "风电场"]
+  },
+  "齿轮箱": {
+    "id": "gearbox",
+    "name": "齿轮箱",
+    "type": "product",
+    "category": "新能源",
+    "description": "将低转速转换为高转速的传动装置。",
+    "meta": ["技术成熟", "故障率较高", "维护成本高"],
+    "upstream": ["齿轮", "轴承", "箱体"],
+    "downstream": ["风电整机"]
+  },
+  "发电机": {
+    "id": "generator",
+    "name": "发电机",
+    "type": "product",
+    "category": "新能源",
+    "description": "将机械能转换为电能的设备。",
+    "meta": ["技术成熟", "大型化趋势", "直驱路线兴起"],
+    "upstream": ["铜线", "磁性材料", "轴承"],
+    "downstream": ["风电整机", "水电"]
+  },
+  "农业产业": {
+    "id": "agriculture",
+    "name": "农业产业",
+    "type": "industry",
+    "category": "农业",
+    "description": "包括种植业、养殖业、农产品加工等，是国民经济基础产业。",
+    "meta": ["市场规模: 万亿级", "现代化: 推进中", "科技赋能: 加速"],
+    "upstream": ["种子", "化肥", "农药", "农机", "饲料"],
+    "downstream": ["农产品加工", "食品工业", "餐饮", "零售"]
+  },
+  "种子": {
+    "id": "seed",
+    "name": "种子",
+    "type": "material",
+    "category": "农业",
+    "description": "农业生产的基础，包括粮食种子、蔬菜种子、水果种子等。",
+    "meta": ["自给率: 需提升", "育种技术: 关键", "国产化: 重要"],
+    "upstream": ["育种研究", "生物技术", "田间试验"],
+    "downstream": ["种植业", "农业生产"]
+  },
+  "化肥": {
+    "id": "fertilizer",
+    "name": "化肥",
+    "type": "material",
+    "category": "农业",
+    "description": "为农作物提供营养的化学肥料，包括氮肥、磷肥、钾肥等。",
+    "meta": ["需求量: 大", "价格波动: 大", "环保压力: 增加"],
+    "upstream": ["原油", "天然气", "磷矿", "钾矿"],
+    "downstream": ["种植业", "农业生产", "环境"]
+  },
+  "农药": {
+    "id": "pesticide",
+    "name": "农药",
+    "type": "material",
+    "category": "农业",
+    "description": "用于防治农作物病虫害的化学物质，包括杀虫剂、杀菌剂、除草剂等。",
+    "meta": ["需求量: 大", "环保要求: 严格", "创新: 生物农药"],
+    "upstream": ["化工原料", "生物技术", "研发"],
+    "downstream": ["种植业", "农业生产", "环境"]
+  },
+  "农机": {
+    "id": "agricultural_machinery",
+    "name": "农机",
+    "type": "product",
+    "category": "农业",
+    "description": "用于农业生产的机械设备，包括拖拉机、收割机、播种机等。",
+    "meta": ["智能化: 趋势", "国产化: 提升", "需求: 稳定"],
+    "upstream": ["发动机", "液压系统", "电子控制", "钢铁"],
+    "downstream": ["种植业", "农业生产", "农业服务"]
+  },
+  "饲料": {
+    "id": "feed",
+    "name": "饲料",
+    "type": "material",
+    "category": "农业",
+    "description": "为畜禽提供营养的饲料产品，包括配合饲料、浓缩饲料等。",
+    "meta": ["需求量: 大", "成本占比: 高", "营养: 关键"],
+    "upstream": ["粮食", "豆粕", "鱼粉", "添加剂"],
+    "downstream": ["养殖业", "畜禽生产"]
+  },
+  "农产品加工": {
+    "id": "agricultural_processing",
+    "name": "农产品加工",
+    "type": "product",
+    "category": "农业",
+    "description": "将农产品转化为食品、饮料、纺织品等产品的产业。",
+    "meta": ["附加值: 提升", "食品安全: 关键", "市场规模: 大"],
+    "upstream": ["农产品", "包装材料", "添加剂", "能源"],
+    "downstream": ["食品工业", "餐饮", "零售", "出口"]
+  },
+  "食品工业": {
+    "id": "food_industry",
+    "name": "食品工业",
+    "type": "industry",
+    "category": "农业",
+    "description": "包括休闲食品、调味品、乳制品、肉制品等细分领域。",
+    "meta": ["市场规模: 大", "消费升级", "品牌化趋势"],
+    "upstream": ["农产品加工", "食品添加剂", "包装材料"],
+    "downstream": ["超市", "电商", "餐饮", "便利店"]
+  },
+  "种植业": {
+    "id": "farming",
+    "name": "种植业",
+    "type": "product",
+    "category": "农业",
+    "description": "包括粮食作物、经济作物、蔬果等种植生产。",
+    "meta": ["关乎粮食安全", "机械化率提升", "规模化趋势"],
+    "upstream": ["种子", "化肥", "农药", "农机"],
+    "downstream": ["农产品加工", "食品工业", "饲料"]
+  },
+  "养殖业": {
+    "id": "livestock",
+    "name": "养殖业",
+    "type": "product",
+    "category": "农业",
+    "description": "包括畜禽养殖、水产养殖等。",
+    "meta": ["规模化程度提升", "环保要求严格", "周期性强"],
+    "upstream": ["饲料", "种苗", "兽药"],
+    "downstream": ["农产品加工", "食品工业", "餐饮"]
+  }
+}

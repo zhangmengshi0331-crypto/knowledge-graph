@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>产业链知识图谱</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #3b82f6;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --purple: #8b5cf6;
+            --bg: #f8fafc;
+            --sidebar: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --text-secondary: #64748b;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* 左侧面板 */
+        .sidebar {
+            width: 380px;
+            background: var(--sidebar);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+        
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+            color: white;
+        }
+        
+        .sidebar-header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .sidebar-header p {
+            font-size: 13px;
+            opacity: 0.85;
+        }
+        
+        .sidebar-header .data-info {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        /* 统计卡片 */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            padding: 16px 20px;
+            background: #f1f5f9;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+        
+        /* 搜索区域 */
+        .search-section {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .search-wrapper {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+        
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+        
+        .search-btn {
+            padding: 12px 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .search-btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        
+        .search-btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* 筛选器 */
+        .filter-section {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-chip {
+            padding: 6px 14px;
+            background: #f1f5f9;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .filter-chip:hover {
+            background: #e2e8f0;
+        }
+        
+        .filter-chip.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        /* 快速入口 */
+        .quick-access {
+            padding: 12px 20px;
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .quick-access-title {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        
+        .quick-access-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .quick-tag {
+            padding: 6px 12px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .quick-tag:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: #eff6ff;
+        }
+        
+        /* 分类导航 */
+        .category-nav {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .category-tabs {
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+        }
+        
+        .category-tab {
+            padding: 6px 12px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        
+        .category-tab:hover {
+            background: #f1f5f9;
+        }
+        
+        .category-tab.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        /* 节点详情 */
+        .node-detail {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .detail-placeholder {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+        
+        .detail-placeholder svg {
+            width: 56px;
+            height: 56px;
+            margin-bottom: 12px;
+            opacity: 0.4;
+        }
+        
+        .detail-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        
+        .detail-header {
+            padding: 16px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .detail-type-badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .detail-type-badge.industry { background: #dbeafe; color: #1d4ed8; }
+        .detail-type-badge.product { background: #dcfce7; color: #15803d; }
+        .detail-type-badge.material { background: #fef3c7; color: #b45309; }
+        
+        .detail-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text);
+        }
+        
+        .detail-body {
+            padding: 16px;
+        }
+        
+        .detail-description {
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+        
+        .detail-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+        
+        .detail-meta-item {
+            padding: 4px 10px;
+            background: #f1f5f9;
+            border-radius: 4px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .detail-section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 16px 0 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .detail-section-title svg {
+            width: 14px;
+            height: 14px;
+        }
+        
+        .relation-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .relation-tag {
+            padding: 6px 12px;
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .relation-tag:hover {
+            background: #eff6ff;
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        
+        .relation-tag.upstream {
+            border-left: 3px solid var(--warning);
+        }
+        
+        .relation-tag.downstream {
+            border-left: 3px solid var(--success);
+        }
+        
+        .expand-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 16px;
+        }
+        
+        .expand-btn:hover {
+            background: #2563eb;
+        }
+        
+        /* 图例 */
+        .legend {
+            padding: 16px 20px;
+            background: #f8fafc;
+            border-top: 1px solid var(--border);
+        }
+        
+        .legend-title {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+        
+        .legend-items {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        
+        /* 右侧图谱 */
+        .graph-container {
+            flex: 1;
+            position: relative;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        }
+        
+        #graph {
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* 控制按钮 */
+        .graph-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 10;
+        }
+        
+        .control-btn {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .control-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        /* 深度控制 */
+        .depth-control {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+        
+        .depth-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+        
+        .depth-slider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .depth-slider input[type="range"] {
+            flex: 1;
+            height: 6px;
+            -webkit-appearance: none;
+            background: #e2e8f0;
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        .depth-slider input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .depth-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--primary);
+            min-width: 20px;
+        }
+        
+        /* 加载状态 */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            backdrop-filter: blur(4px);
+        }
+        
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #e2e8f0;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            margin-top: 16px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        /* 空状态 */
+        .empty-state {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: var(--text-secondary);
+        }
+        
+        .empty-state svg {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+        
+        .empty-state h2 {
+            font-size: 20px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+        
+        .empty-state p {
+            font-size: 14px;
+        }
+        
+        /* D3 样式 */
+        .node circle {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .node:hover circle {
+            filter: brightness(0.9);
+            transform: scale(1.1);
+        }
+        
+        .node text {
+            font-size: 12px;
+            pointer-events: none;
+            font-weight: 500;
+        }
+        
+        .link {
+            fill: none;
+            stroke-opacity: 0.5;
+            transition: stroke-opacity 0.2s;
+        }
+        
+        .link:hover {
+            stroke-opacity: 1;
+        }
+        
+        .tooltip {
+            position: absolute;
+            background: #1e293b;
+            color: white;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            pointer-events: none;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .tooltip-type {
+            font-size: 10px;
+            opacity: 0.7;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        /* 滚动条 */
+        .node-detail::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .node-detail::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        
+        .node-detail::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        
+        /* 节点动画 */
+        .node circle {
+            transform-origin: center;
+        }
+        
+        /* 关系线标签 */
+        .link-label {
+            font-size: 10px;
+            fill: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 左侧面板 -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1>🏭 产业链知识图谱</h1>
+                <p>本地知识图谱 · 产业链上下游分析</p>
+                <div class="data-info" id="dataInfo">
+                    正在加载数据...
+                </div>
+            </div>
+            
+            <!-- 统计卡片 -->
+            <div class="stats-bar">
+                <div class="stat-card">
+                    <div class="stat-value" id="statNodes">-</div>
+                    <div class="stat-label">节点数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statLinks">-</div>
+                    <div class="stat-label">关系数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statCategories">-</div>
+                    <div class="stat-label">产业链</div>
+                </div>
+            </div>
+            
+            <!-- 搜索 -->
+            <div class="search-section">
+                <div class="search-wrapper">
+                    <input type="text" class="search-input" id="searchInput" placeholder="搜索产品、公司或行业...">
+                    <button class="search-btn" id="searchBtn">查询</button>
+                </div>
+            </div>
+            
+            <!-- 分类筛选 -->
+            <div class="filter-section">
+                <span class="filter-chip active" data-filter="all">全部</span>
+                <span class="filter-chip" data-filter="industry">行业</span>
+                <span class="filter-chip" data-filter="product">产品</span>
+                <span class="filter-chip" data-filter="material">材料</span>
+            </div>
+            
+            <!-- 快速入口 -->
+            <div class="quick-access">
+                <div class="quick-access-title">热门搜索</div>
+                <div class="quick-access-tags">
+                    <span class="quick-tag" data-query="AI人工智能">AI人工智能</span>
+                    <span class="quick-tag" data-query="新能源汽车">新能源汽车</span>
+                    <span class="quick-tag" data-query="锂电池">锂电池</span>
+                    <span class="quick-tag" data-query="半导体">半导体</span>
+                    <span class="quick-tag" data-query="芯片">芯片</span>
+                    <span class="quick-tag" data-query="光伏">光伏</span>
+                    <span class="quick-tag" data-query="风电">风电</span>
+                    <span class="quick-tag" data-query="储能系统">储能系统</span>
+                    <span class="quick-tag" data-query="农业产业">农业产业</span>
+                    <span class="quick-tag" data-query="医疗AI">医疗AI</span>
+                </div>
+            </div>
+            
+            <!-- 分类导航 -->
+            <div class="category-nav">
+                <div class="category-tabs" id="categoryTabs">
+                    <button class="category-tab active" data-category="all">全部</button>
+                </div>
+            </div>
+            
+            <!-- 节点详情 -->
+            <div class="node-detail" id="nodeDetail">
+                <div class="detail-placeholder">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2"/>
+                    </svg>
+                    <p>选择节点查看详情</p>
+                    <p style="font-size: 12px; margin-top: 4px;">双击节点展开上下游关系</p>
+                </div>
+            </div>
+            
+            <!-- 图例 -->
+            <div class="legend">
+                <div class="legend-title">图例说明</div>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #3b82f6;"></div>
+                        <span>行业</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #22c55e;"></div>
+                        <span>产品</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #f59e0b;"></div>
+                        <span>材料</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #ef4444;"></div>
+                        <span>事件</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 右侧图谱 -->
+        <div class="graph-container">
+            <div id="graph"></div>
+            
+            <div class="empty-state" id="emptyState">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                    <circle cx="12" cy="12" r="3"/>
+                    <circle cx="19" cy="5" r="2"/>
+                    <circle cx="5" cy="5" r="2"/>
+                    <circle cx="19" cy="19" r="2"/>
+                    <circle cx="5" cy="19" r="2"/>
+                    <line x1="12" y1="9" x2="12" y2="5"/>
+                    <line x1="14.5" y1="10.5" x2="17.5" y2="7.5"/>
+                    <line x1="9.5" y1="10.5" x2="6.5" y2="7.5"/>
+                    <line x1="14.5" y1="13.5" x2="17.5" y2="16.5"/>
+                    <line x1="9.5" y1="13.5" x2="6.5" y2="16.5"/>
+                </svg>
+                <h2>产业链知识图谱</h2>
+                <p>在左侧输入关键词开始探索产业链关系</p>
+            </div>
+            
+            <div class="loading-overlay hidden" id="loadingOverlay">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">正在构建知识图谱...</div>
+            </div>
+            
+            <div class="graph-controls">
+                <button class="control-btn" id="zoomIn" title="放大">+</button>
+                <button class="control-btn" id="zoomOut" title="缩小">−</button>
+                <button class="control-btn" id="resetZoom" title="重置视图">⟲</button>
+                <button class="control-btn" id="centerNode" title="居中">◎</button>
+            </div>
+            
+            <div class="depth-control">
+                <div class="depth-title">查询深度</div>
+                <div class="depth-slider">
+                    <span>1</span>
+                    <input type="range" id="depthSlider" min="1" max="4" value="2">
+                    <span>4</span>
+                    <span class="depth-value" id="depthValue">2</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="tooltip hidden" id="tooltip"></div>
+
+    <script>
+        // ============================================================
+        // 产业链知识图谱 - 基于本地 JSON 数据
+        // ============================================================
+
+        // 全局变量
+        let knowledgeBase = {};
+        let currentFilter = 'all';
+        let currentCategory = 'all';
+        let currentDepth = 2;
+        let expandedNodes = new Set();
+        let currentCenterNode = null;
+
+        // 节点类型配置
+        const nodeTypes = {
+            industry: { color: '#3b82f6', label: '行业' },
+            product: { color: '#22c55e', label: '产品' },
+            material: { color: '#f59e0b', label: '材料' },
+            event: { color: '#ef4444', label: '事件' }
+        };
+
+        // D3 相关变量
+        let svg, g, simulation, zoom;
+        let width, height;
+
+        // 初始化图谱
+        function initGraph() {
+            const container = document.getElementById('graph');
+            width = container.clientWidth;
+            height = container.clientHeight;
+
+            svg = d3.select('#graph')
+                .append('svg')
+                .attr('width', '100%')
+                .attr('height', '100%')
+                .attr('viewBox', `0 0 ${width} ${height}`);
+
+            // 定义箭头
+            svg.append('defs').append('marker')
+                .attr('id', 'arrow')
+                .attr('viewBox', '0 -5 10 10')
+                .attr('refX', 25)
+                .attr('refY', 0)
+                .attr('markerWidth', 6)
+                .attr('markerHeight', 6)
+                .attr('orient', 'auto')
+                .append('path')
+                .attr('d', 'M0,-5L10,0L0,5')
+                .attr('fill', '#94a3b8');
+
+            // 定义渐变
+            const defs = svg.select('defs');
+            const gradient = defs.append('radialGradient')
+                .attr('id', 'bg-gradient');
+            gradient.append('stop').attr('offset', '0%').attr('stop-color', '#f8fafc');
+            gradient.append('stop').attr('offset', '100%').attr('stop-color', '#e2e8f0');
+
+            // 背景
+            svg.append('rect')
+                .attr('width', '100%')
+                .attr('height', '100%')
+                .attr('fill', 'url(#bg-gradient)');
+
+            g = svg.append('g');
+
+            // 缩放
+            zoom = d3.zoom()
+                .scaleExtent([0.2, 4])
+                .on('zoom', (event) => {
+                    g.attr('transform', event.transform);
+                });
+
+            svg.call(zoom);
+
+            // 力导向模拟
+            simulation = d3.forceSimulation()
+                .force('link', d3.forceLink().id(d => d.id).distance(100).strength(0.3))
+                .force('charge', d3.forceManyBody().strength(-400))
+                .force('center', d3.forceCenter(width / 2, height / 2))
+                .force('collision', d3.forceCollide().radius(40));
+        }
+
+        // 加载数据
+        async function loadData() {
+            showLoading(true);
+            try {
+                const response = await fetch('industry-data.json');
+                if (!response.ok) throw new Error('数据加载失败');
+                knowledgeBase = await response.json();
+                
+                // 初始化统计
+                updateStats();
+                initCategoryTabs();
+                updateDataInfo();
+                
+                showLoading(false);
+            } catch (error) {
+                console.error('数据加载失败:', error);
+                document.getElementById('dataInfo').textContent = '数据加载失败，请刷新页面';
+                showLoading(false);
+            }
+        }
+
+        // 更新统计信息
+        function updateStats() {
+            const nodes = Object.values(knowledgeBase);
+            const categories = new Set(nodes.map(n => n.category));
+            
+            // 计算总关系数
+            let linkCount = 0;
+            nodes.forEach(node => {
+                linkCount += (node.upstream?.length || 0) + (node.downstream?.length || 0);
+            });
+            
+            document.getElementById('statNodes').textContent = nodes.length;
+            document.getElementById('statLinks').textContent = linkCount;
+            document.getElementById('statCategories').textContent = categories.size;
+        }
+
+        // 更新数据信息
+        function updateDataInfo() {
+            const nodes = Object.values(knowledgeBase);
+            const categories = [...new Set(nodes.map(n => n.category))];
+            document.getElementById('dataInfo').textContent = 
+                `已加载 ${nodes.length} 个节点 · ${categories.length} 条产业链`;
+        }
+
+        // 初始化分类标签
+        function initCategoryTabs() {
+            const nodes = Object.values(knowledgeBase);
+            const categories = ['all', ...new Set(nodes.map(n => n.category))];
+            
+            const tabs = document.getElementById('categoryTabs');
+            tabs.innerHTML = categories.map(cat => 
+                `<button class="category-tab ${cat === 'all' ? 'active' : ''}" data-category="${cat}">
+                    ${cat === 'all' ? '全部' : cat}
+                </button>`
+            ).join('');
+        }
+
+        // 搜索功能
+        async function performSearch(keyword) {
+            if (!keyword.trim()) return;
+            
+            const btn = document.getElementById('searchBtn');
+            btn.disabled = true;
+            btn.textContent = '查询中...';
+            
+            expandedNodes.clear();
+            expandedNodes.add(keyword);
+            currentCenterNode = keyword;
+            
+            try {
+                const data = buildGraphData(keyword, currentDepth);
+                if (data.nodes.length === 0) {
+                    alert('未找到相关产业链信息');
+                    return;
+                }
+                renderGraph(data);
+                
+                // 显示中心节点详情
+                const centerNode = data.nodes.find(n => n.isCenter);
+                if (centerNode) {
+                    showNodeDetail(centerNode);
+                }
+            } catch (error) {
+                console.error('查询失败:', error);
+                alert('查询失败，请稍后重试');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '查询';
+            }
+        }
+
+        // 构建图谱数据
+        function buildGraphData(keyword, maxDepth) {
+            const nodes = [];
+            const links = [];
+            const visited = new Set();
+            
+            function traverse(name, depth, direction, parentId = null) {
+                if (depth === 0 || visited.has(name)) return;
+                
+                const node = knowledgeBase[name];
+                if (!node) return;
+                
+                visited.add(name);
+                
+                // 类型过滤
+                if (currentFilter !== 'all' && node.type !== currentFilter && node.type !== 'industry') {
+                    // 如果是中心节点或已被展开的节点，仍然显示
+                }
+                
+                nodes.push({
+                    id: node.id || name,
+                    name: node.name || name,
+                    type: node.type || 'product',
+                    description: node.description,
+                    meta: node.meta || [],
+                    category: node.category,
+                    level: depth,
+                    direction: direction,
+                    upstream: node.upstream || [],
+                    downstream: node.downstream || []
+                });
+                
+                if (parentId) {
+                    const relation = direction === 'upstream' ? '依赖' : '产出';
+                    links.push({
+                        source: direction === 'upstream' ? (node.id || name) : parentId,
+                        target: direction === 'upstream' ? parentId : (node.id || name),
+                        type: relation,
+                        depth: depth
+                    });
+                }
+                
+                // 递归上游
+                if (node.upstream && depth > 0) {
+                    node.upstream.forEach(up => traverse(up, depth - 1, 'upstream', node.id || name));
+                }
+                
+                // 递归下游
+                if (node.downstream && depth > 0) {
+                    node.downstream.forEach(down => traverse(down, depth - 1, 'downstream', node.id || name));
+                }
+            }
+            
+            // 从中心节点开始
+            const centerNode = knowledgeBase[keyword];
+            if (!centerNode) {
+                // 尝试模糊匹配
+                const fuzzyResult = fuzzySearch(keyword);
+                if (fuzzyResult) {
+                    return buildGraphData(fuzzyResult.name, maxDepth);
+                }
+                return { nodes: [], links: [] };
+            }
+            
+            visited.add(keyword);
+            nodes.push({
+                id: centerNode.id || keyword,
+                name: centerNode.name || keyword,
+                type: centerNode.type || 'industry',
+                description: centerNode.description,
+                meta: centerNode.meta || [],
+                category: centerNode.category,
+                level: maxDepth,
+                direction: 'center',
+                isCenter: true,
+                upstream: centerNode.upstream || [],
+                downstream: centerNode.downstream || []
+            });
+            
+            // 展开上游
+            if (centerNode.upstream) {
+                centerNode.upstream.forEach(up => traverse(up, maxDepth - 1, 'upstream', centerNode.id || keyword));
+            }
+            
+            // 展开下游
+            if (centerNode.downstream) {
+                centerNode.downstream.forEach(down => traverse(down, maxDepth - 1, 'downstream', centerNode.id || keyword));
+            }
+            
+            return { nodes, links };
+        }
+
+        // 模糊搜索
+        function fuzzySearch(keyword) {
+            const keywordLower = keyword.toLowerCase();
+            for (const [name, node] of Object.entries(knowledgeBase)) {
+                if (name.includes(keyword) || 
+                    (node.description && node.description.toLowerCase().includes(keywordLower))) {
+                    return node;
+                }
+            }
+            return null;
+        }
+
+        // 渲染图谱
+        function renderGraph(data) {
+            currentData = data;
+            
+            g.selectAll('*').remove();
+            
+            if (data.nodes.length === 0) {
+                document.getElementById('emptyState').classList.remove('hidden');
+                return;
+            }
+            
+            document.getElementById('emptyState').classList.add('hidden');
+            
+            // 创建链接
+            const link = g.append('g')
+                .selectAll('line')
+                .data(data.links)
+                .enter().append('line')
+                .attr('class', 'link')
+                .attr('stroke', d => d.type === '依赖' ? '#f59e0b' : '#22c55e')
+                .attr('stroke-width', d => Math.max(1, 2 - d.depth * 0.3))
+                .attr('marker-end', 'url(#arrow)');
+
+            // 创建节点组
+            const node = g.append('g')
+                .attr('class', 'node')
+                .call(d3.drag()
+                    .on('start', dragstarted)
+                    .on('drag', dragged)
+                    .on('end', dragended));
+
+            // 节点圆形
+            node.append('circle')
+                .attr('r', d => d.isCenter ? 30 : d.level === 1 ? 22 : 16)
+                .attr('fill', d => nodeTypes[d.type]?.color || '#6b7280')
+                .attr('stroke', d => d.isCenter ? '#fff' : 'rgba(255,255,255,0.5)')
+                .attr('stroke-width', d => d.isCenter ? 4 : 2)
+                .on('click', (event, d) => showNodeDetail(d))
+                .on('dblclick', (event, d) => expandFromNode(d))
+                .on('mouseover', showTooltip)
+                .on('mouseout', hideTooltip);
+
+            // 节点标签
+            node.append('text')
+                .attr('dy', d => d.isCenter ? 42 : d.level === 1 ? 34 : 28)
+                .attr('text-anchor', 'middle')
+                .attr('fill', '#1e293b')
+                .attr('font-weight', d => d.isCenter ? '600' : '400')
+                .attr('font-size', d => d.isCenter ? '13px' : '11px')
+                .text(d => d.name.length > 6 ? d.name.slice(0, 6) + '...' : d.name);
+
+            // 更新模拟
+            simulation.nodes(data.nodes);
+            simulation.force('link').links(data.links);
+            simulation.alpha(1).restart();
+
+            simulation.on('tick', () => {
+                link
+                    .attr('x1', d => d.source.x)
+                    .attr('y1', d => d.source.y)
+                    .attr('x2', d => d.target.x)
+                    .attr('y2', d => d.target.y);
+
+                node.attr('transform', d => `translate(${d.x},${d.y})`);
+            });
+
+            // 更新统计
+            document.getElementById('statNodes').textContent = data.nodes.length;
+            document.getElementById('statLinks').textContent = data.links.length;
+        }
+
+        // 从节点展开
+        async function expandFromNode(nodeData) {
+            if (expandedNodes.has(nodeData.name)) return;
+            
+            expandedNodes.add(nodeData.name);
+            currentCenterNode = nodeData.name;
+            
+            const data = buildGraphData(nodeData.name, currentDepth);
+            renderGraph(data);
+            showNodeDetail(data.nodes.find(n => n.name === nodeData.name) || nodeData);
+        }
+
+        // 显示节点详情
+        function showNodeDetail(node) {
+            const detail = document.getElementById('nodeDetail');
+            const typeInfo = nodeTypes[node.type] || { color: '#6b7280', label: '未知' };
+            
+            // 构建上下游标签
+            const upstreamTags = (node.upstream || []).slice(0, 8).map(name => 
+                `<span class="relation-tag upstream" onclick="searchNode('${name}')">${name}</span>`
+            ).join('');
+            
+            const downstreamTags = (node.downstream || []).slice(0, 8).map(name => 
+                `<span class="relation-tag downstream" onclick="searchNode('${name}')">${name}</span>`
+            ).join('');
+            
+            detail.innerHTML = `
+                <div class="detail-card">
+                    <div class="detail-header">
+                        <span class="detail-type-badge ${node.type}">${typeInfo.label}</span>
+                        <span class="detail-title">${node.name}</span>
+                    </div>
+                    <div class="detail-body">
+                        <div class="detail-description">${node.description || '暂无描述'}</div>
+                        
+                        <div class="detail-meta">
+                            ${(node.meta || []).map(m => `<span class="detail-meta-item">${m}</span>`).join('')}
+                        </div>
+                        
+                        ${upstreamTags ? `
+                            <div class="detail-section-title">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 19V5M5 12l7-7 7 7"/>
+                                </svg>
+                                上游供应链 (${node.upstream?.length || 0})
+                            </div>
+                            <div class="relation-list">${upstreamTags}</div>
+                        ` : ''}
+                        
+                        ${downstreamTags ? `
+                            <div class="detail-section-title">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 5v14M5 12l7 7 7-7"/>
+                                </svg>
+                                下游应用 (${node.downstream?.length || 0})
+                            </div>
+                            <div class="relation-list">${downstreamTags}</div>
+                        ` : ''}
+                        
+                        <button class="expand-btn" onclick="expandFromCenter('${node.name}')">
+                            从此节点展开完整图谱 →
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 从中心节点展开
+        function expandFromCenter(nodeName) {
+            document.getElementById('searchInput').value = nodeName;
+            expandedNodes.clear();
+            expandedNodes.add(nodeName);
+            performSearch(nodeName);
+        }
+
+        // 搜索特定节点
+        function searchNode(name) {
+            expandedNodes.clear();
+            expandedNodes.add(name);
+            document.getElementById('searchInput').value = name;
+            performSearch(name);
+        }
+
+        // 显示提示框
+        function showTooltip(event, d) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.innerHTML = `
+                <div>${d.name}</div>
+                <div class="tooltip-type">${nodeTypes[d.type]?.label || '未知'}</div>
+            `;
+            tooltip.style.left = event.pageX + 15 + 'px';
+            tooltip.style.top = event.pageY - 10 + 'px';
+            tooltip.classList.remove('hidden');
+        }
+
+        // 隐藏提示框
+        function hideTooltip() {
+            document.getElementById('tooltip').classList.add('hidden');
+        }
+
+        // 拖拽函数
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+        }
+
+        // 显示/隐藏加载状态
+        function showLoading(show) {
+            document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
+        }
+
+        // 事件绑定
+        document.getElementById('searchBtn').addEventListener('click', () => {
+            performSearch(document.getElementById('searchInput').value);
+        });
+
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') performSearch(e.target.value);
+        });
+
+        // 快速标签点击
+        document.querySelectorAll('.quick-tag').forEach(tag => {
+            tag.addEventListener('click', () => {
+                const query = tag.dataset.query;
+                document.getElementById('searchInput').value = query;
+                performSearch(query);
+            });
+        });
+
+        // 分类标签点击
+        document.getElementById('categoryTabs').addEventListener('click', (e) => {
+            if (e.target.classList.contains('category-tab')) {
+                document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+                e.target.classList.add('active');
+                currentCategory = e.target.dataset.category;
+                // 筛选显示
+                if (currentCenterNode) {
+                    performSearch(currentCenterNode);
+                }
+            }
+        });
+
+        // 筛选标签点击
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                currentFilter = chip.dataset.filter;
+                if (currentCenterNode) {
+                    performSearch(currentCenterNode);
+                }
+            });
+        });
+
+        // 深度滑块
+        document.getElementById('depthSlider').addEventListener('input', (e) => {
+            currentDepth = parseInt(e.target.value);
+            document.getElementById('depthValue').textContent = currentDepth;
+        });
+
+        document.getElementById('depthSlider').addEventListener('change', () => {
+            if (currentCenterNode) {
+                expandedNodes.clear();
+                expandedNodes.add(currentCenterNode);
+                performSearch(currentCenterNode);
+            }
+        });
+
+        // 控制按钮
+        document.getElementById('zoomIn').addEventListener('click', () => {
+            svg.transition().duration(300).call(zoom.scaleBy, 1.3);
+        });
+
+        document.getElementById('zoomOut').addEventListener('click', () => {
+            svg.transition().duration(300).call(zoom.scaleBy, 0.7);
+        });
+
+        document.getElementById('resetZoom').addEventListener('click', () => {
+            svg.transition().duration(300).call(zoom.transform, d3.zoomIdentity);
+        });
+
+        document.getElementById('centerNode').addEventListener('click', () => {
+            if (currentCenterNode && currentData) {
+                const node = currentData.nodes.find(n => n.name === currentCenterNode);
+                if (node && node.x !== undefined) {
+                    svg.transition().duration(500).call(
+                        zoom.transform,
+                        d3.zoomIdentity.translate(width/2 - node.x, height/2 - node.y)
+                    );
+                }
+            }
+        });
+
+        // 全局函数
+        window.searchNode = searchNode;
+        window.expandFromCenter = expandFromCenter;
+        window.expandFromNode = expandFromNode;
+
+        // 初始化
+        initGraph();
+        loadData();
+    </script>
+</body>
+</html>
