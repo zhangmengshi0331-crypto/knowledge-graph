@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: knowledge-graph
+    env: python
+    buildCommand: chmod +x build.sh && ./build.sh
+    startCommand: gunicorn knowledge_graph_api:app --bind 0.0.0.0:$PORT --timeout 60
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+    plan: free
